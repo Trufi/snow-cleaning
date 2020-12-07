@@ -1,0 +1,38 @@
+{
+  "name": "@snow/gameserver",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Game Server",
+  "author": {
+    "name": "Mstislav Zhivodkov",
+    "email": "stevemyz@gmail.com",
+    "url": "https://trufi.github.io/"
+  },
+  "scripts": {
+    "start": "npm run dev",
+    "build": "tsc",
+    "dev": "webpack-dev-server --demo",
+    "lint": "tslint 'src/**/*.ts'",
+    "prettier": "prettier --check \"./**/*.{ts,tsx,js,json,html,css}\"",
+    "test": "npm run lint && npm run prettier && npm run build"
+  },
+  "dependencies": {
+    "@2gis/gl-matrix": "^2.4.6",
+    "@snow/utils": "*",
+    "@types/dotenv": "^8.2.0",
+    "@types/ws": "^7.4.0",
+    "axios": "^0.21.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "joi": "^17.3.0",
+    "tslib": "^2.0.3",
+    "ws": "^7.4.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.8",
+    "@types/express": "^4.17.9",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.1.2"
+  }
+}

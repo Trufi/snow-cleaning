@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "types": ["@2gis/gl-matrix"],
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "lib": ["ES2020"],
+    "sourceMap": true,
+    "strict": true,
+    "noEmitHelpers": true,
+    "importHelpers": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true
+  }
+}
