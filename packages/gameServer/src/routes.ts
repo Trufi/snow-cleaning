@@ -1,11 +1,12 @@
 import * as express from 'express';
 import * as Joi from 'joi';
-import { mapMap } from '@snow/utils';
+import { mapMap } from '@game/utils';
 import { State } from './types';
 import * as game from './games/game';
 import { RestartRequest, KickAllRequest } from './types/api';
 import { Cmd } from './commands';
 import { restartInSeconds, kickAll } from './reducers';
+import { Core } from './core';
 
 const secret = 'secretcode';
 
@@ -20,7 +21,7 @@ const restartScheme = Joi.object().keys({
   secret: Joi.string().allow(secret).required(),
 });
 
-export const applyRoutes = (app: express.Express, state: State, executeCmd: (cmd: Cmd) => void) => {
+export const applyRoutes = (app: express.Express, core: Core) => {
   // healthcheck
   app.get('/', (_req, res) => res.sendStatus(200));
 

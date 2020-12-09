@@ -1,19 +1,19 @@
-import { ObjectElement } from '@snow/utils';
+import { ObjectElement } from '@game/utils';
 import { AnyServerMsg } from '../messages';
 
-const sendMsg = (connectionId: number, msg: AnyServerMsg) => ({
+const sendMsg = (connectionId: string, msg: AnyServerMsg) => ({
   type: 'sendMsg' as 'sendMsg',
   connectionId,
   msg,
 });
 
-const sendMsgTo = (connectionIds: number[], msg: AnyServerMsg) => ({
+const sendMsgTo = (connectionIds: string[], msg: AnyServerMsg) => ({
   type: 'sendMsgTo' as 'sendMsgTo',
   connectionIds,
   msg,
 });
 
-const sendPbfMsgTo = (connectionIds: number[], msg: ArrayBuffer) => ({
+const sendPbfMsgTo = (connectionIds: string[], msg: ArrayBuffer) => ({
   type: 'sendPbfMsgTo' as 'sendPbfMsgTo',
   connectionIds,
   msg,
@@ -28,7 +28,7 @@ const notifyMain = () => ({
   type: 'notifyMain' as 'notifyMain',
 });
 
-const authPlayer = (connectionId: number, token: string, joinType: 'player') => ({
+const authPlayer = (connectionId: string, token: string, joinType: 'player') => ({
   type: 'authPlayer' as 'authPlayer',
   connectionId,
   token,

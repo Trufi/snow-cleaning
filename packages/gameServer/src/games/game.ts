@@ -1,126 +1,138 @@
-import { findMap, mapMap, mapToArray } from '@snow/utils';
+import { findMap, mapMap, mapToArray } from '@game/utils';
 import { Cmd, cmd, union } from '../commands';
 import { msg, pbfMsg } from '../messages';
-import { ClientMsg } from '../../client/messages';
 import { config } from '../config';
 import { GameState, GamePlayer, RestartData } from '../types';
 
-export const debugInfo = (state: GameState) => {
-  const { players } = state;
-  return {
-    ...state,
-    players: mapToArray(players),
-  };
-};
+interface GameOptions {
+  currentTime: number;
+  maxPlayers: number;
+  duration: number;
+}
 
-const tickBodyRecipientIds = (gameState: GameState) => {
+export class Game {
+  public state: GameState;
+
+  constructor(options: GameOptions) {
+    this.state = {
+      startTime: options.currentTime,
+      prevTime: options.currentTime,
+      time: options.currentTime,
+      duration: options.duration,
+      maxPlayers: options.duration,
+      players: new Map(),
+      restart: {
+        need: false,
+        time: 0,
+        duration: 0,
+      },
+    };
+  }
+
+  public update(time: number): Cmd {
+    this.state.prevTime = this.state.time;
+    this.state.time = time;
+
+    const cmds: Cmd[] = [];
+
+    cmds.push(cmd.sendPbfMsgTo(getTickBodyRecipientIds(this.state), pbfMsg.tickData(this.state)));
+
+    if (needToRestart(this.state)) {
+      console.log(`Restart game!`);
+      cmds.push(restart(this.state));
+    }
+
+    return union(cmds);
+  }
+
+  public canPlayerBeAdded(userId: number) {
+    if (this.state.players.size >= this.state.maxPlayers) {
+      return false;
+    }
+    const hasSamePlayer = findMap(this.state.players, (p) => p.userId === userId);
+    return !hasSamePlayer;
+  }
+
+  public addPlayer(
+    id: string,
+    data: {
+      userId: number;
+      name: string;
+    },
+  ): Cmd {
+    const { userId, name } = data;
+
+    const gamePlayer: GamePlayer = {
+      id,
+      userId,
+      name,
+    };
+    this.state.players.set(id, gamePlayer);
+
+    return [cmd.sendMsg(id, msg.startData(this.state, gamePlayer))];
+  }
+
+  public removePlayer(id: string): Cmd {
+    this.state.players.delete(id);
+
+    return cmd.sendMsgTo(getTickBodyRecipientIds(this.state), msg.playerLeave(id));
+  }
+
+  public updatePlayerChanges(playerId: string, clientMsg: any): Cmd {
+    const { time } = clientMsg;
+
+    // Если сообщение слишком старое, то не принимаем его
+    if (this.state.time - time > config.discardMessageThreshold) {
+      return;
+    }
+
+    const gamePlayer = this.state.players.get(playerId);
+    if (!gamePlayer) {
+      return;
+    }
+
+    const cmds: Cmd[] = [];
+
+    // TODO: Какое-то обновление
+
+    return union(cmds);
+  }
+
+  public restartInSeconds(data: RestartData): Cmd {
+    const { inSeconds, duration } = data;
+
+    this.state.restart.need = true;
+    this.state.restart.time = this.state.time + inSeconds * 1000;
+    this.state.restart.duration = duration;
+
+    return cmd.sendMsgTo(getTickBodyRecipientIds(this.state), msg.restartAt(this.state));
+  }
+
+  public getDebugInfo() {
+    const { players } = this.state;
+    return {
+      ...this.state,
+      players: mapToArray(players),
+    };
+  }
+}
+
+function needToRestart(state: GameState) {
+  return state.restart.need && state.time > state.restart.time;
+}
+
+const getTickBodyRecipientIds = (gameState: GameState) => {
   return mapMap(gameState.players, (p) => p.id);
 };
 
-export const createGameState = (time: number, maxPlayers: number, duration: number): GameState => {
-  return {
-    prevTime: time,
-    time,
-    players: new Map(),
-    startTime: time,
-    duration,
-    maxPlayers,
-    restart: {
-      need: false,
-      time: 0,
-      duration,
-    },
-  };
-};
-
-export const tick = (game: GameState, time: number): Cmd => {
-  game.prevTime = game.time;
-  game.time = time;
-
-  const cmds: Cmd[] = [];
-
-  cmds.push(cmd.sendPbfMsgTo(tickBodyRecipientIds(game), pbfMsg.tickData(game)));
-
-  if (game.restart.need && game.time > game.restart.time) {
-    console.log(`Restart game!`);
-    cmds.push(restart(game));
-  }
-
-  return union(cmds);
-};
-
-export const canJoinPlayer = (game: GameState, userId: number) => {
-  if (game.players.size >= game.maxPlayers) {
-    return false;
-  }
-  const hasSamePlayer = findMap(game.players, (p) => p.userId === userId);
-  return !hasSamePlayer;
-};
-
-export const joinPlayer = (
-  game: GameState,
-  id: number,
-  data: {
-    userId: number;
-    name: string;
-  },
-): Cmd => {
-  const { userId, name } = data;
-
-  const gamePlayer: GamePlayer = {
-    id,
-    userId,
-    name,
-  };
-  game.players.set(id, gamePlayer);
-
-  return [cmd.sendMsg(id, msg.startData(game, gamePlayer))];
-};
-
-export const kickPlayer = (game: GameState, id: number): Cmd => {
-  game.players.delete(id);
-
-  return cmd.sendMsgTo(tickBodyRecipientIds(game), msg.playerLeave(id));
-};
-
-export const updatePlayerChanges = (game: GameState, playerId: number, clientMsg: ClientMsg['changes']): Cmd => {
-  const { time } = clientMsg;
-
-  // Если сообщение слишком старое, то не принимаем его
-  if (game.time - time > config.discardMessageThreshold) {
-    return;
-  }
-
-  const gamePlayer = game.players.get(playerId);
-  if (!gamePlayer) {
-    return;
-  }
-
-  const cmds: Cmd[] = [];
-
-  // TODO: Какое-то обновление
-
-  return union(cmds);
-};
-
-export const restartInSeconds = (game: GameState, data: RestartData): Cmd => {
-  const { inSeconds, duration } = data;
-
-  game.restart.need = true;
-  game.restart.time = game.time + inSeconds * 1000;
-  game.restart.duration = duration;
-
-  return cmd.sendMsgTo(tickBodyRecipientIds(game), msg.restartAt(game));
-};
-
-const restart = (game: GameState): Cmd => {
-  game.restart.need = false;
+const restart = (state: GameState): Cmd => {
+  state.restart.need = false;
 
   const {
     restart: { duration },
-  } = game;
-  game.duration = duration;
-  game.startTime = game.time;
+  } = state;
+  state.duration = duration;
+  state.startTime = state.time;
 
-  return [cmd.sendMsgTo(tickBodyRecipientIds(game), msg.restartData(game)), cmd.notifyMain()];
+  return [cmd.sendMsgTo(getTickBodyRecipientIds(state), msg.restartData(state)), cmd.notifyMain()];
 };

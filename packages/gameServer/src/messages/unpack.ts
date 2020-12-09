@@ -10,7 +10,7 @@ for (const type in clientMsgSchema.MsgType) {
   tagToMsgType[clientMsgSchema.MsgType[type].value] = type;
 }
 
-const unpackPbf = (buffer: ArrayBuffer, id: number): AnyClientMsg | undefined => {
+const unpackPbf = (buffer: ArrayBuffer, id: string): AnyClientMsg | undefined => {
   let msg: AnyClientMsg | undefined;
 
   try {
@@ -29,7 +29,7 @@ const unpackPbf = (buffer: ArrayBuffer, id: number): AnyClientMsg | undefined =>
   }
 };
 
-export const unpackMessage = (data: ws.Data, id: number): AnyClientMsg | undefined => {
+export const unpackMessage = (data: ws.Data, id: string): AnyClientMsg | undefined => {
   if (data instanceof Buffer) {
     return unpackPbf(data, id);
   }

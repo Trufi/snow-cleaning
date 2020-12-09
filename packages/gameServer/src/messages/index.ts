@@ -1,4 +1,4 @@
-import { ObjectElement, mapMap, pick } from '@snow/utils';
+import { ObjectElement, mapMap, pick } from '@game/utils';
 import { GameState, GamePlayer } from '../types';
 
 const serverMsgSchema = require('../../protobuf/serverMsg.proto');

@@ -1,31 +1,17 @@
-import * as ws from 'ws';
-
 export interface InitialConnection {
   status: 'initial';
-  id: number;
-  socket: ws;
-
-  /**
-   * Используется для пинга и для удаления, если не отвечает
-   */
-  isAlive: boolean;
+  id: string;
 }
 
 export interface PlayerConnection {
   status: 'player';
-  id: number;
-  socket: ws;
+  id: string;
 
   /**
    * Этот id присылает нам главный сервер
    */
   userId: number;
   name: string;
-
-  /**
-   * Используется для пинга и для удаления, если не отвечает
-   */
-  isAlive: boolean;
 }
 
 export type Connection = InitialConnection | PlayerConnection;
@@ -39,7 +25,7 @@ export interface GamePlayer {
   /**
    * id равен connectionId
    */
-  id: number;
+  id: string;
   userId: number;
   name: string;
 }
@@ -56,7 +42,7 @@ export interface GameObserver {
 export interface GameState {
   prevTime: number;
   time: number;
-  players: Map<number, GamePlayer>;
+  players: Map<string, GamePlayer>;
   startTime: number;
   duration: number;
   maxPlayers: number;
@@ -70,7 +56,6 @@ export interface GameState {
 export interface State {
   url: string;
   connections: ConnectionsState;
-  game: GameState;
 }
 
 export interface RestartData {

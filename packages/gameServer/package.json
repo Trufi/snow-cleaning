@@ -1,5 +1,5 @@
 {
-  "name": "@snow/gameserver",
+  "name": "@game/gameserver",
   "private": true,
   "version": "0.0.0",
   "description": "Game Server",
@@ -18,13 +18,14 @@
   },
   "dependencies": {
     "@2gis/gl-matrix": "^2.4.6",
-    "@snow/utils": "*",
+    "@game/utils": "*",
     "@types/dotenv": "^8.2.0",
     "@types/ws": "^7.4.0",
     "axios": "^0.21.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "hyperid": "^2.0.5",
     "joi": "^17.3.0",
     "tslib": "^2.0.3",
     "ws": "^7.4.1"
