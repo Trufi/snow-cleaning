@@ -10,14 +10,15 @@
   },
   "scripts": {
     "start": "npm run dev",
-    "build": "tsc",
-    "dev": "webpack-dev-server --demo",
+    "build": "tsc src/index.ts",
+    "dev": "ts-node src/index.ts",
     "lint": "tslint 'src/**/*.ts'",
     "prettier": "prettier --check \"./**/*.{ts,tsx,js,json,html,css}\"",
     "test": "npm run lint && npm run prettier && npm run build"
   },
   "dependencies": {
     "@2gis/gl-matrix": "^2.4.6",
+    "@game/client": "*",
     "@game/utils": "*",
     "@types/dotenv": "^8.2.0",
     "@types/ws": "^7.4.0",

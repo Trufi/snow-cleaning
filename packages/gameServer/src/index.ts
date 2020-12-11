@@ -1,4 +1,3 @@
-import '@2gis/gl-matrix';
 import * as express from 'express';
 import { config } from './config';
 import { applyRoutes } from './routes';

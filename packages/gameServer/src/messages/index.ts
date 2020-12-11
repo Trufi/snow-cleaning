@@ -47,7 +47,7 @@ const playerNewBody = (player: GamePlayer) => ({
   playerId: player.id,
 });
 
-const playerLeave = (playerId: number) => ({
+const playerLeave = (playerId: string) => ({
   type: 'playerLeave' as 'playerLeave',
   playerId,
 });

@@ -1,4 +1,5 @@
 import { Server } from 'http';
+import { AnyClientMsg, ClientMsg } from '@game/client/src/messages';
 import { Cmd, ExistCmd } from './commands';
 import { config } from './config';
 import { Game } from './games/game';
@@ -8,11 +9,12 @@ import { Connection, InitialConnection, PlayerConnection } from './types';
 import { time } from './utils';
 
 export class Core {
-  private transport: Transport;
-  private game: Game;
-  private connections: Map<string, Connection>;
+  public game: Game;
+  public connections: Map<string, Connection>;
 
-  constructor(httpServer: Server, private url: string) {
+  private transport: Transport;
+
+  constructor(httpServer: Server, public url: string) {
     this.transport = new Transport(httpServer, {
       onNewConnection: this.onNewConnection,
       onMessage: this.onMessage,
@@ -149,9 +151,9 @@ export class Core {
 
   private playerConnectionMessage(connection: PlayerConnection, clientMsg: AnyClientMsg) {
     switch (clientMsg.type) {
-      case 'changes':
-        this.updatePlayerChanges(clientMsg, connection.id);
-        break;
+      // case 'changes':
+      //   this.updatePlayerChanges(clientMsg, connection.id);
+      //   break;
 
       case 'ping':
         this.pingMessage(clientMsg, connection);
@@ -159,14 +161,14 @@ export class Core {
     }
   }
 
-  private updatePlayerChanges(msg: ClientMsg['changes'], connectionId: string) {
-    const connection = this.connections.get(connectionId);
-    if (!connection || connection.status !== 'player') {
-      return;
-    }
+  // private updatePlayerChanges(msg: ClientMsg['changes'], connectionId: string) {
+  //   const connection = this.connections.get(connectionId);
+  //   if (!connection || connection.status !== 'player') {
+  //     return;
+  //   }
 
-    this.executeCmd(this.game.updatePlayerChanges(connectionId, msg));
-  }
+  //   this.executeCmd(this.game.updatePlayerChanges(connectionId, msg));
+  // }
 
   private pingMessage(clientMsg: ClientMsg['ping'], connection: Connection) {
     // Да, функция — не чистая, но и пофиг!

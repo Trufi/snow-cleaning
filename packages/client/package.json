@@ -1,10 +1,10 @@
 {
-  "name": "@game/utils",
+  "name": "@game/client",
   "private": true,
   "version": "0.0.0",
   "description": "",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "index": "src/index.ts",
+  "typings": "src/index.ts",
   "author": {
     "name": "Mstislav Zhivodkov",
     "email": "stevemyz@gmail.com",
@@ -13,13 +13,16 @@
   "scripts": {
     "start": "npm run dev",
     "build": "tsc",
-    "dev": "tsc --watch",
+    "dev": "webpack-dev-server --demo",
     "lint": "tslint 'src/**/*.ts'",
     "prettier": "prettier --check \"./**/*.{ts,tsx,js,json,html,css}\"",
     "test": "npm run lint && npm run prettier && npm run build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@2gis/gl-matrix": "^2.4.6"
+  },
   "devDependencies": {
+    "@game/utils": "*",
     "typescript": "^4.1.2"
   }
 }

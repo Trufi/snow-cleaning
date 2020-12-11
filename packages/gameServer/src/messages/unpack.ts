@@ -1,5 +1,5 @@
 import * as ws from 'ws';
-import { AnyClientMsg } from '../../client/messages';
+import { AnyClientMsg } from '@game/client/src/messages';
 import { check } from './validation';
 
 const clientMsgSchema = require('../../protobuf/clientMsg.proto');

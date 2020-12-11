@@ -1,11 +1,7 @@
 import * as express from 'express';
 import * as Joi from 'joi';
 import { mapMap } from '@game/utils';
-import { State } from './types';
-import * as game from './games/game';
 import { RestartRequest, KickAllRequest } from './types/api';
-import { Cmd } from './commands';
-import { restartInSeconds, kickAll } from './reducers';
 import { Core } from './core';
 
 const secret = 'secretcode';
@@ -27,9 +23,9 @@ export const applyRoutes = (app: express.Express, core: Core) => {
 
   app.get('/state', (_req, res) => {
     const result = {
-      url: state.url,
-      connections: mapMap(state.connections.map, ({ id, status }) => ({ id, status })),
-      game: game.debugInfo(state.game),
+      url: core.url,
+      connections: mapMap(core.connections, ({ id, status }) => ({ id, status })),
+      game: core.game.getDebugInfo(),
     };
     res.send(JSON.stringify(result));
   });
@@ -45,7 +41,7 @@ export const applyRoutes = (app: express.Express, core: Core) => {
       return;
     }
 
-    kickAll(state);
+    core.kickAll();
 
     const msg = 'Kick all players';
     console.log(msg);
@@ -69,12 +65,11 @@ export const applyRoutes = (app: express.Express, core: Core) => {
     const msg = `Restart game after ${inSeconds} seconds, duration: ${duration}`;
 
     console.log(msg);
-    executeCmd(
-      restartInSeconds(state, {
-        duration,
-        inSeconds,
-      }),
-    );
+    core.game.restartInSeconds({
+      duration,
+      inSeconds,
+    });
+
     return res.status(200).send(msg);
   });
 };

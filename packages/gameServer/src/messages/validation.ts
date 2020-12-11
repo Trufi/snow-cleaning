@@ -1,5 +1,5 @@
 import * as Joi from 'joi';
-import { AnyClientMsg } from '../../client/messages';
+import { AnyClientMsg } from '@game/client/src/messages';
 
 const joinGame = Joi.object().keys({
   type: Joi.string().valid('joinGame').required(),
