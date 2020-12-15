@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { AnyClientMsg, ClientMsg } from '@game/client/src/messages';
+import type { AnyClientMsg, ClientMsg } from '@game/client/src/messages';
 import { Cmd, ExistCmd } from './commands';
 import { config } from './config';
 import { Game } from './games/game';

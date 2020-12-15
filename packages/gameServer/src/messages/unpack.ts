@@ -1,39 +1,8 @@
 import * as ws from 'ws';
-import { AnyClientMsg } from '@game/client/src/messages';
-import { check } from './validation';
+import type { AnyClientMsg } from '@game/client/src/messages';
+// import { check } from './validation';
 
-const clientMsgSchema = require('../../protobuf/clientMsg.proto');
-const Pbf = require('pbf');
-
-const tagToMsgType: { [key: number]: string } = {};
-for (const type in clientMsgSchema.MsgType) {
-  tagToMsgType[clientMsgSchema.MsgType[type].value] = type;
-}
-
-const unpackPbf = (buffer: ArrayBuffer, id: string): AnyClientMsg | undefined => {
-  let msg: AnyClientMsg | undefined;
-
-  try {
-    const pbf = new Pbf(buffer);
-    const pbfMsg = clientMsgSchema.Changes.read(pbf);
-    pbfMsg.type = tagToMsgType[pbfMsg.type];
-
-    msg = pbfMsg;
-  } catch (err) {
-    console.log(`Client (id: ${id} pbf msg parse error`);
-    return;
-  }
-
-  if (msg && check(msg, id)) {
-    return msg;
-  }
-};
-
-export const unpackMessage = (data: ws.Data, id: string): AnyClientMsg | undefined => {
-  if (data instanceof Buffer) {
-    return unpackPbf(data, id);
-  }
-
+export const unpackMessage = (data: ws.Data, _id: string): AnyClientMsg | undefined => {
   if (typeof data !== 'string') {
     return;
   }
@@ -47,7 +16,7 @@ export const unpackMessage = (data: ws.Data, id: string): AnyClientMsg | undefin
     return;
   }
 
-  if (check(msg, id)) {
-    return msg;
-  }
+  // if (check(msg, id)) {
+  return msg;
+  // }
 };

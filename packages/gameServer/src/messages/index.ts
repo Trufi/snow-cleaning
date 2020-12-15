@@ -1,9 +1,6 @@
 import { ObjectElement, mapMap, pick } from '@game/utils';
 import { GameState, GamePlayer } from '../types';
 
-const serverMsgSchema = require('../../protobuf/serverMsg.proto');
-const Pbf = require('pbf');
-
 const connect = (id: number) => ({
   type: 'connect' as 'connect',
   id,
@@ -90,12 +87,8 @@ export const msg = {
 };
 
 export const pbfMsg = {
-  tickData: (game: GameState) => {
-    const pbf = new Pbf();
-    const msg = tickData(game);
-    serverMsgSchema.TickData.write(msg, pbf);
-    const u8 = pbf.finish() as Uint8Array;
-    return u8.buffer.slice(0, u8.byteLength);
+  tickData: (_game: GameState) => {
+    return new Uint8Array(0);
   },
 };
 
