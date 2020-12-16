@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@game/utils": ["packages/utils/src"],
+      "@game/utils/*": ["packages/utils/src/*"],
+      "@game/client/*": ["packages/client/src/*"],
+      "@game/server/*": ["packages/server/src/*"]
+    },
+    "target": "ES2020",
+    "moduleResolution": "node",
+    "lib": ["ES2020"],
+    "sourceMap": true,
+    "strict": true,
+    "noEmitHelpers": true,
+    "importHelpers": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowSyntheticDefaultImports": true
+  }
+}

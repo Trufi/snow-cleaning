@@ -1,5 +1,5 @@
 import * as ws from 'ws';
-import type { AnyClientMsg } from '@game/client/src/messages';
+import type { AnyClientMsg } from '@game/client/messages';
 // import { check } from './validation';
 
 export const unpackMessage = (data: ws.Data, _id: string): AnyClientMsg | undefined => {

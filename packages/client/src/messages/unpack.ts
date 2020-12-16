@@ -1,4 +1,4 @@
-import type { AnyServerMsg } from '@game/gameserver/src/messages';
+import type { AnyServerMsg } from '@game/server/messages';
 
 const unpackPbf = (_buffer: ArrayBuffer): AnyServerMsg | undefined => {
   return;

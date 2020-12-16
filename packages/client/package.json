@@ -12,8 +12,8 @@
   },
   "scripts": {
     "start": "npm run dev",
-    "build": "tsc",
-    "dev": "webpack-dev-server --demo",
+    "build": "webpack --env=production",
+    "dev": "webpack serve",
     "lint": "tslint 'src/**/*.ts'",
     "prettier": "prettier --check \"./**/*.{ts,tsx,js,json,html,css}\"",
     "test": "npm run lint && npm run prettier && npm run build"
@@ -22,8 +22,12 @@
     "@2gis/gl-matrix": "^2.4.6"
   },
   "devDependencies": {
-    "@game/gameserver": "*",
-    "@game/utils": "*",
-    "typescript": "^4.1.2"
+    "fork-ts-checker-webpack-plugin": "^6.0.7",
+    "html-webpack-plugin": "^5.0.0-alpha.9",
+    "ts-loader": "^8.0.12",
+    "typescript": "^4.1.2",
+    "webpack": "^5.9.0",
+    "webpack-cli": "^4.2.0",
+    "webpack-dev-server": "^3.11.0"
   }
 }
