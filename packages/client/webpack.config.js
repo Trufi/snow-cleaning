@@ -41,7 +41,7 @@ module.exports = (env) => {
     plugins: [
       new ForkTsCheckerWebpackPlugin(),
       new HtmlWebpackPlugin({
-        template: 'src/index.html',
+        template: 'index.html',
       }),
     ],
 

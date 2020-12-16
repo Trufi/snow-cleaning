@@ -1,12 +1,8 @@
 {
   "name": "root",
   "private": true,
-  "scripts": {
-    "bootstrap": "lerna bootstrap",
-    "dev": "lerna dev"
-  },
+  "scripts": {},
   "devDependencies": {
-    "lerna": "^3.22.1",
     "prettier": "^2.2.1"
   }
 }
