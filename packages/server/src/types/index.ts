@@ -44,6 +44,7 @@ export interface GameState {
   time: number;
   players: Map<string, GamePlayer>;
   startTime: number;
+  lastPolluteTime: number;
   duration: number;
   maxPlayers: number;
   restart: {

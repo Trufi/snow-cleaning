@@ -17,4 +17,6 @@ export const config = {
    * Сделано для того, чтобы игрок в офлайне всех не убил
    */
   discardMessageThreshold: 1000,
+
+  polluteInterval: 100,
 };

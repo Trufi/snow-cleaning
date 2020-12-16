@@ -1,8 +1,10 @@
-import { findMap, mapMap, mapToArray } from '@game/utils';
+import { clamp, findMap, mapMap, mapToArray } from '@game/utils';
 import { Cmd, cmd, union } from '../commands';
 import { msg, pbfMsg } from '../messages';
 import { config } from '../config';
 import { GameState, GamePlayer, RestartData } from '../types';
+import { prepareGraph } from './graph';
+import { ClientGraph } from './types';
 
 interface GameOptions {
   currentTime: number;
@@ -12,12 +14,14 @@ interface GameOptions {
 
 export class Game {
   public state: GameState;
+  private graph: ClientGraph;
 
   constructor(options: GameOptions) {
     this.state = {
       startTime: options.currentTime,
       prevTime: options.currentTime,
       time: options.currentTime,
+      lastPolluteTime: options.currentTime,
       duration: options.duration,
       maxPlayers: options.duration,
       players: new Map(),
@@ -27,6 +31,8 @@ export class Game {
         duration: 0,
       },
     };
+
+    this.graph = prepareGraph(require('../../assets/novosibirsk.json'));
   }
 
   public update(time: number): Cmd {
@@ -36,6 +42,8 @@ export class Game {
     const cmds: Cmd[] = [];
 
     cmds.push(cmd.sendPbfMsgTo(getTickBodyRecipientIds(this.state), pbfMsg.tickData(this.state)));
+
+    polluteRoads(this.graph, this.state);
 
     if (needToRestart(this.state)) {
       console.log(`Restart game!`);
@@ -119,6 +127,21 @@ export class Game {
 
 function needToRestart(state: GameState) {
   return state.restart.need && state.time > state.restart.time;
+}
+
+function polluteRoads(graph: ClientGraph, state: GameState) {
+  const dt = state.time - state.lastPolluteTime;
+
+  if (dt < config.polluteInterval) {
+    return;
+  }
+
+  state.lastPolluteTime = state.time;
+
+  const pollutionFactor = 0.005;
+  graph.edges.forEach((edge) => {
+    edge.pollution = clamp(edge.pollution + (dt * pollutionFactor) / 1000, 0, 1);
+  });
 }
 
 const getTickBodyRecipientIds = (gameState: GameState) => {

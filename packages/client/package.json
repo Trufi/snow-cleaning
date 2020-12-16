@@ -22,6 +22,8 @@
     "@2gis/gl-matrix": "^2.4.6"
   },
   "devDependencies": {
+    "2gl": "^0.8.0",
+    "@2gis/mapgl": "^1.6.0",
     "fork-ts-checker-webpack-plugin": "^6.0.7",
     "html-webpack-plugin": "^5.0.0-alpha.9",
     "ts-loader": "^8.0.12",

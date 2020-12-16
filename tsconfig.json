@@ -5,7 +5,8 @@
       "@game/utils": ["packages/utils/src"],
       "@game/utils/*": ["packages/utils/src/*"],
       "@game/client/*": ["packages/client/src/*"],
-      "@game/server/*": ["packages/server/src/*"]
+      "@game/server/*": ["packages/server/src/*"],
+      "@game/data/*": ["packages/data/*"]
     },
     "target": "ES2020",
     "moduleResolution": "node",
