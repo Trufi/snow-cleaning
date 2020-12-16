@@ -105,9 +105,6 @@ export class Transport {
     this.connections.set(id, connection);
 
     this.props.onNewConnection(id);
-
-    // TODO послать сообщение
-    // executeCmd(cmd.sendMsg(id, msg.connect(id)));
   };
 
   private onMessage = (connection: Connection) => (data: ws.Data) => {

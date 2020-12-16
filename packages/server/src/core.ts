@@ -47,6 +47,7 @@ export class Core {
       id,
     };
     this.connections.set(id, connection);
+    this.transport.sendMessage(id, msg.connect(id));
   };
 
   /**

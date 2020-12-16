@@ -1,7 +1,7 @@
 import { ObjectElement, mapMap, pick } from '@game/utils';
 import { GameState, GamePlayer } from '../types';
 
-const connect = (id: number) => ({
+const connect = (id: string) => ({
   type: 'connect' as 'connect',
   id,
 });
