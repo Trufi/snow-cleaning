@@ -1,3 +1,5 @@
+import { Harvester } from '../games/types';
+
 export interface InitialConnection {
   status: 'initial';
   id: string;
@@ -28,6 +30,8 @@ export interface GamePlayer {
   id: string;
   userId: number;
   name: string;
+
+  harvester: Harvester;
 }
 
 export interface GameObserver {

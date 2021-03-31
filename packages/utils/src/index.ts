@@ -35,3 +35,10 @@ export const pick = <T extends { [key: string]: any }, K extends keyof T>(obj: T
 
 export type ObjectElement<T> = T[keyof T];
 export type ArrayElement<ArrayType> = ArrayType extends Array<infer ElementType> ? ElementType : never;
+
+export function createRandomFunction(seed: number) {
+  return () => {
+    seed = (seed * 16807) % 2147483647;
+    return (seed - 1) / 2147483646;
+  };
+}

@@ -29,6 +29,7 @@ export class Transport {
   public sendMessage(msg: AnyClientMsg) {
     this.ws.send(JSON.stringify(msg));
   }
+
   public sendPbfMessage(msg: ArrayBuffer) {
     this.ws.send(msg);
   }

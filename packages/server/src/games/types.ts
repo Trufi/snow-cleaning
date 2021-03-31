@@ -1,14 +1,14 @@
 export interface ClientGraphVertex {
-  edges: number[]; // индексы ребер
+  edges: ClientGraphEdge[]; // индексы ребер
   coords: number[];
   type: 'road' | 'house' | 'null';
-  houseEdge: number; // -1 если нет
+  // houseEdge: ClientGraphEdge | undefined; // undefined если нет
 }
 
 export interface ClientGraphEdge {
   geometry: number[][];
-  a: number;
-  b: number;
+  a: ClientGraphVertex;
+  b: ClientGraphVertex;
   type: 'road' | 'house' | 'null';
   pollution: number;
 }
@@ -19,4 +19,20 @@ export interface ClientGraph {
   center: number[];
   min: number[];
   max: number[];
+}
+
+export interface Harvester {
+  playerId: string;
+  forward: boolean;
+  edge: ClientGraphEdge;
+  speed: number;
+
+  /**
+   * Индекс сегмента грани, с учетом направления,
+   * т.е. если точка едет с конфа (forward === false), то индекса будет считаться с конца
+   */
+  edgeSegment: number;
+  passed: number;
+
+  edgeStartTime: number;
 }

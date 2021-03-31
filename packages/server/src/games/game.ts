@@ -5,6 +5,7 @@ import { config } from '../config';
 import { GameState, GamePlayer, RestartData } from '../types';
 import { prepareGraph } from './graph';
 import { ClientGraph } from './types';
+import { createHarvester, updateHarvester } from './harvester';
 
 interface GameOptions {
   currentTime: number;
@@ -41,9 +42,10 @@ export class Game {
 
     const cmds: Cmd[] = [];
 
-    cmds.push(cmd.sendPbfMsgTo(getTickBodyRecipientIds(this.state), pbfMsg.tickData(this.state)));
-
+    updateHarvesters(this.graph, this.state);
     polluteRoads(this.graph, this.state);
+
+    cmds.push(cmd.sendPbfMsgTo(getTickBodyRecipientIds(this.state), pbfMsg.tickData(this.state)));
 
     if (needToRestart(this.state)) {
       console.log(`Restart game!`);
@@ -70,10 +72,13 @@ export class Game {
   ): Cmd {
     const { userId, name } = data;
 
+    const harvester = createHarvester(id, this.graph);
+
     const gamePlayer: GamePlayer = {
       id,
       userId,
       name,
+      harvester,
     };
     this.state.players.set(id, gamePlayer);
 
@@ -127,6 +132,12 @@ export class Game {
 
 function needToRestart(state: GameState) {
   return state.restart.need && state.time > state.restart.time;
+}
+
+function updateHarvesters(graph: ClientGraph, state: GameState) {
+  state.players.forEach((player) => {
+    updateHarvester(graph, player.harvester, state.time);
+  });
 }
 
 function polluteRoads(graph: ClientGraph, state: GameState) {
