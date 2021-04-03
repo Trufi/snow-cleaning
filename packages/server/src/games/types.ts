@@ -1,27 +1,4 @@
-export interface ClientGraphVertex {
-  index: number;
-  edges: ClientGraphEdge[];
-  coords: number[];
-  type: 'road' | 'house' | 'null';
-  // houseEdge: ClientGraphEdge | undefined; // undefined если нет
-}
-
-export interface ClientGraphEdge {
-  index: number;
-  geometry: number[][];
-  a: ClientGraphVertex;
-  b: ClientGraphVertex;
-  type: 'road' | 'house' | 'null';
-  pollution: number;
-}
-
-export interface ClientGraph {
-  vertices: ClientGraphVertex[];
-  edges: ClientGraphEdge[];
-  center: number[];
-  min: number[];
-  max: number[];
-}
+import { ClientGraphEdge } from '@game/data/clientGraph';
 
 export interface Harvester {
   playerId: string;

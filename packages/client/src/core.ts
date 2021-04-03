@@ -1,6 +1,7 @@
 import { AnyServerMsg, ServerMsg } from '@game/server/messages';
 import { Transport, TransportProps } from './transport';
 import { msg } from './messages';
+import { Game } from './game/game';
 
 export class InitialState {
   public type = 'initial' as const;
@@ -36,13 +37,15 @@ export class InitialState {
 
 class InGameState {
   public type = 'initial' as const;
+  private game: Game;
 
   constructor(
     private messageHandlers: TransportProps,
     private transport: Transport,
-    serverMsg: ServerMsg['startData'],
+    startData: ServerMsg['startData'],
   ) {
     messageHandlers.onMessage = this.onServerMessage;
+    this.game = new Game(startData);
   }
 
   private onServerMessage = (serverMsg: AnyServerMsg) => {

@@ -28,6 +28,7 @@ module.exports = (env) => {
       alias: {
         '@game/gameServer': path.resolve(__dirname, '../gameServer/src'),
         '@game/utils': path.resolve(__dirname, '../utils/src'),
+        '@game/data': path.resolve(__dirname, '../data'),
       },
     },
 

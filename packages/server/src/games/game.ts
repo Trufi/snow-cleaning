@@ -1,10 +1,9 @@
+import { ClientGraph, prepareGraph } from '@game/data/clientGraph';
 import { clamp, findMap, mapMap, mapToArray } from '@game/utils';
 import { Cmd, cmd, union } from '../commands';
 import { msg } from '../messages';
 import { config } from '../config';
 import { GameState, GamePlayer, RestartData } from '../types';
-import { prepareGraph } from './graph';
-import { ClientGraph } from './types';
 import { createHarvester, updateHarvester } from './harvester';
 
 interface GameOptions {

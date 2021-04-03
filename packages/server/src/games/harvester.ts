@@ -1,7 +1,8 @@
+import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 import { clamp } from '@game/utils';
 import { vec2dist } from '@game/utils/vec2';
 import { random } from '../utils';
-import { ClientGraph, ClientGraphEdge, ClientGraphVertex, Harvester } from './types';
+import { Harvester } from './types';
 
 export function createHarvester(playerId: string, graph: ClientGraph) {
   const vertexFrom = graph.vertices[Math.floor(random() * graph.vertices.length)];
