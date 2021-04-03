@@ -14,19 +14,24 @@ export function prepareGraph(graph: Graph): ClientGraph {
    * А также вынимаем из вершин грани примыкающие к домам и ставим в их отдельное поле houseEdge,
    * чтобы потом можно было легко его найти и не делать find по всем граням вершины.
    */
-  graph.vertices.forEach((v) => {
-    const clientVertex: ClientGraphVertex = v as any;
+  graph.vertices.forEach((vertex, index) => {
+    const clientVertex: ClientGraphVertex = vertex as any;
+    clientVertex.index = index;
 
     // Удаляем все грани примыкающие к домам
-    let houseEdgeVertexIndex = v.edges.findIndex((i) => graph.edges[i].type === 'house');
+    let houseEdgeVertexIndex = vertex.edges.findIndex((i) => graph.edges[i].type === 'house');
     while (houseEdgeVertexIndex !== -1) {
       clientVertex.edges.splice(houseEdgeVertexIndex, 1);
-      houseEdgeVertexIndex = v.edges.findIndex((i) => graph.edges[i].type === 'house');
+      houseEdgeVertexIndex = vertex.edges.findIndex((i) => graph.edges[i].type === 'house');
     }
+
+    // Заменяем индексы граней на ссылки
+    clientVertex.edges = vertex.edges.map((edgeIndex) => clientGraph.edges[edgeIndex]);
   });
 
-  graph.edges.forEach((edge) => {
+  graph.edges.forEach((edge, index) => {
     const clientEdge: ClientGraphEdge = edge as any;
+    clientEdge.index = index;
     clientEdge.pollution = 0;
 
     // Заменяем индексы вершин на их ссылки для удобства в дальнейшем

@@ -1,11 +1,13 @@
 export interface ClientGraphVertex {
-  edges: ClientGraphEdge[]; // индексы ребер
+  index: number;
+  edges: ClientGraphEdge[];
   coords: number[];
   type: 'road' | 'house' | 'null';
   // houseEdge: ClientGraphEdge | undefined; // undefined если нет
 }
 
 export interface ClientGraphEdge {
+  index: number;
   geometry: number[][];
   a: ClientGraphVertex;
   b: ClientGraphVertex;
@@ -33,6 +35,13 @@ export interface Harvester {
    */
   edgeSegment: number;
   passed: number;
+
+  /**
+   * Описывает местоположение на текущем сегменте грани
+   * Задается от 0 до 1
+   * Не зависит от направления?
+   */
+  positionAtSegment: number;
 
   edgeStartTime: number;
 }

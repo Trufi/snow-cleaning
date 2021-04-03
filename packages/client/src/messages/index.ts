@@ -1,7 +1,7 @@
 import { ObjectElement } from '@game/utils';
 
 const joinGame = (token: string) => ({
-  type: 'joinGame' as 'joinGame',
+  type: 'joinGame' as const,
   token,
 });
 

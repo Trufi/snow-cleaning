@@ -1,4 +1,5 @@
 import { ObjectElement, mapMap, pick } from '@game/utils';
+import { Harvester } from '../games/types';
 import { GameState, GamePlayer } from '../types';
 
 const connect = (id: string) => ({
@@ -10,14 +11,22 @@ const gameJoinFail = () => ({
   type: 'gameJoinFail' as 'gameJoinFail',
 });
 
-const getPlayerData = (player: GamePlayer) => pick(player, ['id', 'name']);
+const getHarvesterData = (harvester: Harvester) => ({
+  ...pick(harvester, ['playerId', 'edgeSegment', 'edgeStartTime', 'forward', 'passed', 'positionAtSegment', 'speed']),
+  edgeIndex: harvester.edge.index,
+});
+
+const getPlayerData = (player: GamePlayer) => ({
+  ...pick(player, ['id', 'name']),
+  harvester: getHarvesterData(player.harvester),
+});
 export type PlayerData = ReturnType<typeof getPlayerData>;
 
 const startData = (game: GameState, player: GamePlayer) => {
   const players = mapMap(game.players, getPlayerData);
 
   return {
-    type: 'startData' as 'startData',
+    type: 'startData' as const,
     playerId: player.id,
     endTime: game.startTime + game.duration,
     players,
@@ -55,9 +64,10 @@ const playerDeath = (playerId: number, causePlayerId: number) => ({
   causePlayerId,
 });
 
-const tickData = (_game: GameState) => {
+const tickData = (game: GameState) => {
   return {
-    type: 'tickData' as 'tickData',
+    type: 'tickData' as const,
+    harvesters: mapMap(game.players, (player) => getHarvesterData(player.harvester)),
   };
 };
 

@@ -1,6 +1,6 @@
 import { clamp, findMap, mapMap, mapToArray } from '@game/utils';
 import { Cmd, cmd, union } from '../commands';
-import { msg, pbfMsg } from '../messages';
+import { msg } from '../messages';
 import { config } from '../config';
 import { GameState, GamePlayer, RestartData } from '../types';
 import { prepareGraph } from './graph';
@@ -45,7 +45,8 @@ export class Game {
     updateHarvesters(this.graph, this.state);
     polluteRoads(this.graph, this.state);
 
-    cmds.push(cmd.sendPbfMsgTo(getTickBodyRecipientIds(this.state), pbfMsg.tickData(this.state)));
+    // cmds.push(cmd.sendPbfMsgTo(getTickBodyRecipientIds(this.state), pbfMsg.tickData(this.state)));
+    cmds.push(cmd.sendMsgTo(getTickBodyRecipientIds(this.state), msg.tickData(this.state)));
 
     if (needToRestart(this.state)) {
       console.log(`Restart game!`);
