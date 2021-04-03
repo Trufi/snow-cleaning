@@ -18,13 +18,6 @@ export function prepareGraph(graph: Graph): ClientGraph {
     const clientVertex: ClientGraphVertex = vertex as any;
     clientVertex.index = index;
 
-    // Удаляем все грани примыкающие к домам
-    let houseEdgeVertexIndex = vertex.edges.findIndex((i) => graph.edges[i].type === 'house');
-    while (houseEdgeVertexIndex !== -1) {
-      clientVertex.edges.splice(houseEdgeVertexIndex, 1);
-      houseEdgeVertexIndex = vertex.edges.findIndex((i) => graph.edges[i].type === 'house');
-    }
-
     // Заменяем индексы граней на ссылки
     clientVertex.edges = vertex.edges.map((edgeIndex) => clientGraph.edges[edgeIndex]);
   });
@@ -37,6 +30,15 @@ export function prepareGraph(graph: Graph): ClientGraph {
     // Заменяем индексы вершин на их ссылки для удобства в дальнейшем
     clientEdge.a = clientGraph.vertices[edge.a];
     clientEdge.b = clientGraph.vertices[edge.b];
+  });
+
+  // Удаляем все грани примыкающие к домам, чтобы не выбирать их в процессе езды
+  clientGraph.vertices.forEach((vertex) => {
+    let houseEdgeVertexIndex = vertex.edges.findIndex((edge) => edge.type === 'house');
+    while (houseEdgeVertexIndex !== -1) {
+      vertex.edges.splice(houseEdgeVertexIndex, 1);
+      houseEdgeVertexIndex = vertex.edges.findIndex((edge) => edge.type === 'house');
+    }
   });
 
   return clientGraph;
