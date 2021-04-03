@@ -2,13 +2,14 @@ import { AnyServerMsg, ServerMsg } from '@game/server/messages';
 import { Transport, TransportProps } from './transport';
 import { msg } from './messages';
 import { Game } from './game/game';
+import { Render } from './map/render';
 
 export class InitialState {
   public type = 'initial' as const;
   private messageHandlers: TransportProps;
   private transport: Transport;
 
-  constructor() {
+  constructor(private render: Render) {
     this.messageHandlers = {
       onOpen: () => console.log('open'),
       onMessage: this.onServerMessage,
@@ -28,7 +29,7 @@ export class InitialState {
       }
 
       case 'startData': {
-        new InGameState(this.messageHandlers, this.transport, serverMsg);
+        new InGameState(this.messageHandlers, this.transport, this.render, serverMsg);
         break;
       }
     }
@@ -40,17 +41,25 @@ class InGameState {
   private game: Game;
 
   constructor(
-    private messageHandlers: TransportProps,
-    private transport: Transport,
+    messageHandlers: TransportProps,
+    _transport: Transport,
+    render: Render,
     startData: ServerMsg['startData'],
   ) {
     messageHandlers.onMessage = this.onServerMessage;
-    this.game = new Game(startData);
+    this.game = new Game(render, startData);
   }
 
   private onServerMessage = (serverMsg: AnyServerMsg) => {
     if (serverMsg.type !== 'tickData') {
       console.log('message', serverMsg);
+    }
+
+    switch (serverMsg.type) {
+      case 'tickData': {
+        this.game.updateFromServer(serverMsg);
+        break;
+      }
     }
   };
 }

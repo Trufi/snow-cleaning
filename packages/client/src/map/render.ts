@@ -1,10 +1,11 @@
 import { Map } from '@2gis/mapgl/types';
-import { ClientGraphEdge, Human, RenderContext, SimulationIcons } from '../types';
+import { ClientGraphEdge, RenderContext, SimulationIcons } from '../types';
 import { PointBatch, PointBatchEntity } from './pointBatch';
 import { LineBatch } from './lineBatch';
+import { Harvester } from '../game/game';
 
 interface RenderPoint {
-  human: Human;
+  harvester: Harvester;
   point: PointBatchEntity;
 }
 
@@ -22,17 +23,7 @@ export class Render {
     this.canvas.style.top = '0';
     this.canvas.style.pointerEvents = 'none';
     this.canvas.style.background = 'transparent';
-
-    const mapCanvas = (map as any)._impl.modules.layout.mapContainer.querySelector('canvas');
-    const mapCanvasNextSibling = mapCanvas?.nextSibling;
-    if (!mapCanvas) {
-      throw new Error('Map canvas not found');
-    }
-    if (!mapCanvasNextSibling) {
-      throw new Error('Map html markers container not found');
-    }
-
-    (map as any)._impl.modules.layout.mapContainer.insertBefore(this.canvas, mapCanvasNextSibling);
+    map.getContainer().appendChild(this.canvas);
 
     this.points = [];
 
@@ -65,14 +56,12 @@ export class Render {
     this.lineBatch = new LineBatch(this.renderContext);
   }
 
-  public setPoints(humans: Human[], min: number[], max: number[]) {
-    this.points = [];
-
-    this.points = humans.map((human) => ({
-      human,
+  public setPoints(harversters: Harvester[], min: number[], max: number[]) {
+    this.points = harversters.map((harvester) => ({
+      harvester,
       point: {
         icon: 0,
-        position: [human.coords[0], human.coords[1]],
+        position: [0, 0],
       },
     }));
 
@@ -93,16 +82,16 @@ export class Render {
 
   public render() {
     for (let i = 0; i < this.points.length; i++) {
-      const { point, human } = this.points[i];
-      point.position[0] = human.coords[0];
-      point.position[1] = human.coords[1];
+      const { point, harvester } = this.points[i];
+      point.position[0] = harvester.coords[0];
+      point.position[1] = harvester.coords[1];
       point.icon = 0;
     }
 
     const { gl } = this.renderContext;
     gl.clear(gl.COLOR_BUFFER_BIT);
     const cameraMatrix = (this.map as any)._impl.modules.renderer.vpMatrix;
-    this.lineBatch.render(cameraMatrix, this.map.getSize(), this.map.getZoom());
+    // this.lineBatch.render(cameraMatrix, this.map.getSize(), this.map.getZoom());
     this.pointBatch.render(cameraMatrix, this.map.getSize(), this.map.getZoom());
   }
 

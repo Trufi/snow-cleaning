@@ -1,6 +1,6 @@
 import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 import { clamp } from '@game/utils';
-import { vec2dist } from '@game/utils/vec2';
+import { vec2dist, vec2lerp } from '@game/utils/vec2';
 import { random } from '../utils';
 import { Harvester } from './types';
 
@@ -20,6 +20,7 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
     passed: 0,
     edgeStartTime: 0,
     positionAtSegment: 0,
+    coords: [0, 0],
   };
 
   return harvester;
@@ -42,8 +43,7 @@ export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: 
       harvester.edgeSegment = i;
       harvester.passed = passed;
       harvester.positionAtSegment = clamp((distance - passed) / length, 0, 1);
-      //   const t = clamp((distance - passed) / length, 0, 1);
-      //   vec2lerp(harvester.coords, segmentA, segmentB, t);
+      harvester.coords = vec2lerp(harvester.coords, segmentA, segmentB, harvester.positionAtSegment);
       ended = false;
       break;
     }

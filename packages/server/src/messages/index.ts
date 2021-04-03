@@ -12,7 +12,16 @@ const gameJoinFail = () => ({
 });
 
 const getHarvesterData = (harvester: Harvester) => ({
-  ...pick(harvester, ['playerId', 'edgeSegment', 'edgeStartTime', 'forward', 'passed', 'positionAtSegment', 'speed']),
+  ...pick(harvester, [
+    'playerId',
+    'edgeSegment',
+    'edgeStartTime',
+    'forward',
+    'passed',
+    'positionAtSegment',
+    'speed',
+    'coords',
+  ]),
   edgeIndex: harvester.edge.index,
 });
 

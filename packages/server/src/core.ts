@@ -140,7 +140,7 @@ export class Core {
           connection.id,
           {
             // TODO
-            userId: 0,
+            userId: NaN,
             name: '',
           },
           'player',

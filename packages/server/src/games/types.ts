@@ -21,4 +21,6 @@ export interface Harvester {
   positionAtSegment: number;
 
   edgeStartTime: number;
+
+  coords: number[];
 }

@@ -20,6 +20,10 @@ module.exports = (env) => {
             },
           },
         },
+        {
+          test: /(\.vsh|\.fsh)$/i,
+          use: 'raw-loader',
+        },
       ],
     },
 
