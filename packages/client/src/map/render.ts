@@ -16,7 +16,7 @@ export class Render {
   private points: RenderPoint[];
   private lineBatch: LineBatch;
 
-  constructor(private map: Map, icons: SimulationIcons) {
+  constructor(public map: Map, icons: SimulationIcons) {
     this.canvas = document.createElement('canvas');
     this.canvas.style.position = 'absolute';
     this.canvas.style.left = '0';

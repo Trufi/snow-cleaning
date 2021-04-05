@@ -1,7 +1,10 @@
-import { ClientGraph, ClientGraphEdge, prepareGraph } from '@game/data/clientGraph';
+import { ClientGraph, ClientGraphEdge, ClientGraphVertex, prepareGraph } from '@game/data/clientGraph';
 import { ServerMsg } from '@game/server/messages';
 import { mapMap } from '@game/utils';
+import { vec2dist } from '@game/utils/vec2';
 import { Render } from '../map/render';
+import { projectGeoToMap } from '../utils';
+import { pathFind } from './pathfind';
 
 const rawGraph = require('../../assets/novosibirsk.json');
 
@@ -40,6 +43,7 @@ export interface GameState {
   prevTime: number;
   time: number;
   players: Map<string, GamePlayer>;
+  currentPlayer: GamePlayer;
 }
 
 export class Game {
@@ -50,12 +54,7 @@ export class Game {
     this.graph = prepareGraph(rawGraph);
     const time = Date.now();
 
-    this.state = {
-      prevTime: time,
-      time,
-      players: new Map(),
-    };
-
+    const players: GameState['players'] = new Map();
     startData.players.forEach((player) => {
       const harvester: Harvester = {
         ...player.harvester,
@@ -68,8 +67,15 @@ export class Game {
         harvester,
       };
 
-      this.state.players.set(player.id, gamePlayer);
+      players.set(player.id, gamePlayer);
     });
+
+    this.state = {
+      prevTime: time,
+      time,
+      players,
+      currentPlayer: players.get(startData.playerId) as GamePlayer, // TODO: обработать бы
+    };
 
     this.render.setPoints(
       mapMap(this.state.players, (p) => p.harvester),
@@ -78,6 +84,11 @@ export class Game {
     );
 
     requestAnimationFrame(this.gameLoop);
+
+    this.render.map.on('click', (ev) => {
+      const point = projectGeoToMap(ev.lngLat);
+      this.goToPoint(point);
+    });
   }
 
   public updateFromServer(data: ServerMsg['tickData']) {
@@ -92,6 +103,32 @@ export class Game {
     });
   }
 
+  public goToPoint(mapPoint: number[]) {
+    const toVertex = findNearestGraphVertex(this.graph, mapPoint);
+
+    // TODO: мы и так знаем, где находится игрок сейчас, надо выбрать вершину из двух
+    const fromVertex = findNearestGraphVertex(this.graph, this.state.currentPlayer.harvester.coords);
+
+    const path = pathFind(fromVertex, toVertex);
+    if (!path) {
+      return;
+    }
+
+    // new mapgl.Marker(this.render.map, {
+    //   coordinates: projectMapToGeo(toVertex.coords),
+    //   label: { text: 'TO' },
+    // });
+
+    // new mapgl.Marker(this.render.map, {
+    //   coordinates: projectMapToGeo(fromVertex.coords),
+    //   label: { text: 'FROM' },
+    // });
+
+    // new mapgl.Polyline(this.render.map, {
+    //   coordinates: path.map((vertex) => projectMapToGeo(vertex.coords)),
+    // });
+  }
+
   private gameLoop = () => {
     requestAnimationFrame(this.gameLoop);
 
@@ -101,4 +138,19 @@ export class Game {
 
     this.render.render();
   };
+}
+
+function findNearestGraphVertex(graph: ClientGraph, point: number[]) {
+  let minDistance = Infinity;
+  let nearestVertex: ClientGraphVertex = graph.vertices[0];
+
+  for (const vertex of graph.vertices) {
+    const dist = vec2dist(point, vertex.coords);
+    if (minDistance > dist) {
+      minDistance = dist;
+      nearestVertex = vertex;
+    }
+  }
+
+  return nearestVertex;
 }
