@@ -4,7 +4,8 @@ import { Cmd, cmd, union } from '../commands';
 import { msg } from '../messages';
 import { config } from '../config';
 import { GameState, GamePlayer, RestartData } from '../types';
-import { createHarvester, updateHarvester } from './harvester';
+import { createHarvester, setHarvesterRoute, updateHarvester } from './harvester';
+import { ClientMsg } from '@game/client/messages';
 
 interface GameOptions {
   currentTime: number;
@@ -89,6 +90,20 @@ export class Game {
     this.state.players.delete(id);
 
     return cmd.sendMsgTo(getTickBodyRecipientIds(this.state), msg.playerLeave(id));
+  }
+
+  public setPlayerRoute(playerId: string, data: ClientMsg['newRoute']): Cmd {
+    const player = this.state.players.get(playerId);
+    if (!player) {
+      // TODO: добавить логирование этого безобразия
+      return;
+    }
+
+    const route = data.vertexIndices.map((index) => this.graph.vertices[index]);
+
+    // TODO: проверка, что путь валидный
+
+    setHarvesterRoute(player.harvester, this.state.time, route);
   }
 
   public updatePlayerChanges(playerId: string, clientMsg: any): Cmd {

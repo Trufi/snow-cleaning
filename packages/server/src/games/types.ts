@@ -1,9 +1,13 @@
-import { ClientGraphEdge } from '@game/data/clientGraph';
+import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 
 export interface Harvester {
   playerId: string;
   forward: boolean;
-  edge: ClientGraphEdge;
+
+  route: ClientGraphVertex[];
+  edgeIndexInRoute: number;
+  edge: ClientGraphEdge | undefined;
+
   speed: number;
 
   /**

@@ -152,6 +152,11 @@ export class Core {
 
   private playerConnectionMessage(connection: PlayerConnection, clientMsg: AnyClientMsg) {
     switch (clientMsg.type) {
+      case 'newRoute': {
+        this.game.setPlayerRoute(connection.id, clientMsg);
+        break;
+      }
+
       // case 'changes':
       //   this.updatePlayerChanges(clientMsg, connection.id);
       //   break;

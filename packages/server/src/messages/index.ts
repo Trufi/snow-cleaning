@@ -22,7 +22,7 @@ const getHarvesterData = (harvester: Harvester) => ({
     'speed',
     'coords',
   ]),
-  edgeIndex: harvester.edge.index,
+  edgeIndex: harvester.edge ? harvester.edge.index : -1,
 });
 
 const getPlayerData = (player: GamePlayer) => ({

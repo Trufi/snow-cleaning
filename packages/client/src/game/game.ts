@@ -2,8 +2,10 @@ import { ClientGraph, ClientGraphEdge, ClientGraphVertex, prepareGraph } from '@
 import { ServerMsg } from '@game/server/messages';
 import { mapMap } from '@game/utils';
 import { vec2dist } from '@game/utils/vec2';
+import { cmd, Cmd } from '../commands';
+import { drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
-import { projectGeoToMap } from '../utils';
+import { msg } from '../messages';
 import { pathFind } from './pathfind';
 
 const rawGraph = require('../../assets/novosibirsk.json');
@@ -11,7 +13,7 @@ const rawGraph = require('../../assets/novosibirsk.json');
 export interface Harvester {
   playerId: string;
   forward: boolean;
-  edge: ClientGraphEdge;
+  edge: ClientGraphEdge | undefined;
   speed: number;
 
   /**
@@ -84,11 +86,6 @@ export class Game {
     );
 
     requestAnimationFrame(this.gameLoop);
-
-    this.render.map.on('click', (ev) => {
-      const point = projectGeoToMap(ev.lngLat);
-      this.goToPoint(point);
-    });
   }
 
   public updateFromServer(data: ServerMsg['tickData']) {
@@ -99,11 +96,11 @@ export class Game {
       }
 
       Object.assign(gamePlayer.harvester, harvester);
-      gamePlayer.harvester.edge = this.graph.edges[harvester.edgeIndex];
+      gamePlayer.harvester.edge = harvester.edgeIndex !== -1 ? this.graph.edges[harvester.edgeIndex] : undefined;
     });
   }
 
-  public goToPoint(mapPoint: number[]) {
+  public goToPoint(mapPoint: number[]): Cmd {
     const toVertex = findNearestGraphVertex(this.graph, mapPoint);
 
     // TODO: мы и так знаем, где находится игрок сейчас, надо выбрать вершину из двух
@@ -114,19 +111,9 @@ export class Game {
       return;
     }
 
-    // new mapgl.Marker(this.render.map, {
-    //   coordinates: projectMapToGeo(toVertex.coords),
-    //   label: { text: 'TO' },
-    // });
+    drawRoute(this.render.map, path);
 
-    // new mapgl.Marker(this.render.map, {
-    //   coordinates: projectMapToGeo(fromVertex.coords),
-    //   label: { text: 'FROM' },
-    // });
-
-    // new mapgl.Polyline(this.render.map, {
-    //   coordinates: path.map((vertex) => projectMapToGeo(vertex.coords)),
-    // });
+    return cmd.sendMsg(msg.newRoute(path));
   }
 
   private gameLoop = () => {

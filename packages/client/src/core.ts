@@ -3,6 +3,8 @@ import { Transport, TransportProps } from './transport';
 import { msg } from './messages';
 import { Game } from './game/game';
 import { Render } from './map/render';
+import { projectGeoToMap } from './utils';
+import { Cmd, ExistCmd } from './commands';
 
 export class InitialState {
   public type = 'initial' as const;
@@ -42,12 +44,17 @@ class InGameState {
 
   constructor(
     messageHandlers: TransportProps,
-    _transport: Transport,
-    render: Render,
+    private transport: Transport,
+    private render: Render,
     startData: ServerMsg['startData'],
   ) {
     messageHandlers.onMessage = this.onServerMessage;
     this.game = new Game(render, startData);
+
+    this.render.map.on('click', (ev) => {
+      const point = projectGeoToMap(ev.lngLat);
+      this.executeCmd(this.game.goToPoint(point));
+    });
   }
 
   private onServerMessage = (serverMsg: AnyServerMsg) => {
@@ -62,4 +69,23 @@ class InGameState {
       }
     }
   };
+
+  private executeCmd(cmd: Cmd) {
+    if (cmd) {
+      if (Array.isArray(cmd)) {
+        cmd.forEach((c) => this.executeOneCmd(c));
+      } else {
+        this.executeOneCmd(cmd);
+      }
+    }
+  }
+
+  private executeOneCmd(cmdData: ExistCmd) {
+    switch (cmdData.type) {
+      case 'sendMsg': {
+        this.transport.sendMessage(cmdData.msg);
+        break;
+      }
+    }
+  }
 }

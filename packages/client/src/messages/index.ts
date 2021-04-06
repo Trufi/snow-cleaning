@@ -1,8 +1,14 @@
+import { ClientGraphVertex } from '@game/data/clientGraph';
 import { ObjectElement } from '@game/utils';
 
 const joinGame = (token: string) => ({
   type: 'joinGame' as const,
   token,
+});
+
+const newRoute = (vertices: ClientGraphVertex[]) => ({
+  type: 'newRoute' as const,
+  vertexIndices: vertices.map((vertex) => vertex.index),
 });
 
 const ping = (time: number) => ({
@@ -12,6 +18,7 @@ const ping = (time: number) => ({
 
 export const msg = {
   joinGame,
+  newRoute,
   ping,
 };
 

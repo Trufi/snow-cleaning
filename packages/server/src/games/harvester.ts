@@ -1,4 +1,4 @@
-import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
+import { ClientGraph, ClientGraphVertex } from '@game/data/clientGraph';
 import { clamp } from '@game/utils';
 import { vec2dist, vec2lerp } from '@game/utils/vec2';
 import { random } from '../utils';
@@ -6,27 +6,72 @@ import { Harvester } from './types';
 
 export function createHarvester(playerId: string, graph: ClientGraph) {
   const vertexFrom = graph.vertices[Math.floor(random() * graph.vertices.length)];
-  const edge = vertexFrom.edges[Math.floor(random() * vertexFrom.edges.length)];
+  // const edge = vertexFrom.edges[Math.floor(random() * vertexFrom.edges.length)];
 
-  const forward = edge.a === vertexFrom;
+  // const forward = edge.a === vertexFrom;
 
   const harvester: Harvester = {
     playerId,
-    edge,
-    forward,
-    speed: 100,
+
+    route: [vertexFrom],
+    edgeIndexInRoute: 0,
+    edge: undefined,
+    forward: false,
 
     edgeSegment: 0,
     passed: 0,
     edgeStartTime: 0,
     positionAtSegment: 0,
     coords: [0, 0],
+
+    speed: 100,
   };
 
   return harvester;
 }
 
+export function setHarvesterRoute(harvester: Harvester, now: number, route: ClientGraphVertex[]) {
+  harvester.route = route;
+  harvester.edge = undefined;
+  harvester.edgeIndexInRoute = 0;
+  harvester.edgeSegment = 0;
+  harvester.passed = 0;
+  harvester.edgeStartTime = now;
+
+  if (route.length > 2) {
+    const maybeFoundEdge = findEdge(route[0], route[1]);
+
+    if (maybeFoundEdge) {
+      harvester.edge = maybeFoundEdge.edge;
+      harvester.forward = maybeFoundEdge.forward;
+    }
+  }
+}
+
+function findEdge(fromVertex: ClientGraphVertex, toVertex: ClientGraphVertex) {
+  for (const edge of fromVertex.edges) {
+    if (edge.a === fromVertex && edge.b === toVertex) {
+      return {
+        edge,
+        forward: true,
+      };
+    }
+
+    if (edge.a === toVertex && edge.b === fromVertex) {
+      return {
+        edge,
+        forward: false,
+      };
+    }
+  }
+}
+
 export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: number) {
+  // Харвестер стоит на месте и ждет выбора пути
+  if (!harvester.edge) {
+    return;
+  }
+
   const geometry = harvester.edge.geometry;
 
   const distance = harvester.speed * (now - harvester.edgeStartTime);
@@ -51,29 +96,22 @@ export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: 
   }
 
   if (ended) {
-    // найти следующую цель
-    const endVertex = harvester.forward ? harvester.edge.b : harvester.edge.a;
+    harvester.edgeIndexInRoute++;
+    harvester.edge = undefined;
 
-    harvester.edge = chooseNextEdge(harvester.edge, endVertex);
-    harvester.edgeStartTime = now;
-    harvester.edgeSegment = 0;
-    harvester.passed = 0;
-    harvester.forward = harvester.edge.a === endVertex;
+    if (harvester.edgeIndexInRoute + 1 < harvester.route.length) {
+      const maybeFoundEdge = findEdge(
+        harvester.route[harvester.edgeIndexInRoute],
+        harvester.route[harvester.edgeIndexInRoute + 1],
+      );
+      if (maybeFoundEdge) {
+        harvester.edge = maybeFoundEdge.edge;
+        harvester.forward = maybeFoundEdge.forward;
+
+        harvester.edgeStartTime = now;
+        harvester.edgeSegment = 0;
+        harvester.passed = 0;
+      }
+    }
   }
-}
-
-function chooseNextEdge(prevEdge: ClientGraphEdge, vertex: ClientGraphVertex) {
-  const edgeIndex = Math.floor(random() * vertex.edges.length);
-  let edge = vertex.edges[edgeIndex];
-
-  // Если выбралась предыдущая грань, то попробуй выбрать другую
-  if (vertex.edges.length > 1 && edge === prevEdge) {
-    edge = vertex.edges[(edgeIndex + 1) % vertex.edges.length];
-  }
-
-  if (edge === undefined) {
-    console.log('dddd hz');
-  }
-
-  return edge;
 }
