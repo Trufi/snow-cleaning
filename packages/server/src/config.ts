@@ -7,7 +7,7 @@ export const config = {
   port: process.env.GAME_SERVER_PORT || 3001,
   clientsCheckInterval: 30000,
 
-  serverGameStep: 100,
+  serverGameStep: 50,
   clientSendChangesInterval: 100,
   clientPingInterval: 500,
   smoothPingTime: 2000,

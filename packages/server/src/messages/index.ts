@@ -1,4 +1,5 @@
-import { ObjectElement, mapMap, pick } from '@game/utils';
+import { ClientGraph } from '@game/data/clientGraph';
+import { ObjectElement, mapMap, pick, round } from '@game/utils';
 import { Harvester } from '../games/types';
 import { GameState, GamePlayer } from '../types';
 
@@ -73,10 +74,19 @@ const playerDeath = (playerId: number, causePlayerId: number) => ({
   causePlayerId,
 });
 
-const tickData = (game: GameState) => {
+const tickData = (game: GameState, graph: ClientGraph) => {
+  const changedEdges: { [index: string]: number } = {};
+  graph.edges.forEach((edge, index) => {
+    const pollution = round(edge.pollution, 1);
+    if (pollution !== 1) {
+      changedEdges[index] = pollution;
+    }
+  });
+
   return {
     type: 'tickData' as const,
     harvesters: mapMap(game.players, (player) => getHarvesterData(player.harvester)),
+    pollution: changedEdges,
   };
 };
 

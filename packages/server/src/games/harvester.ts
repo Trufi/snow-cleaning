@@ -22,7 +22,7 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
     passed: 0,
     edgeStartTime: 0,
     positionAtSegment: 0,
-    coords: [0, 0],
+    coords: [vertexFrom.coords[0], vertexFrom.coords[1]],
 
     speed: 100,
   };

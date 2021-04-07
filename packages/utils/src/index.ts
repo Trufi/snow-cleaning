@@ -42,3 +42,7 @@ export function createRandomFunction(seed: number) {
     return (seed - 1) / 2147483646;
   };
 }
+
+export function round(x: number, digit: number) {
+  return Math.round(x * 10 ** digit) / 10 ** digit;
+}

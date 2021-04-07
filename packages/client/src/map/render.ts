@@ -1,8 +1,9 @@
 import { Map } from '@2gis/mapgl/types';
-import { ClientGraphEdge, RenderContext, SimulationIcons } from '../types';
+import { RenderContext, SimulationIcons } from '../types';
 import { PointBatch, PointBatchEntity } from './pointBatch';
 import { LineBatch } from './lineBatch';
 import { Harvester } from '../game/game';
+import { ClientGraphEdge } from '@game/data/clientGraph';
 
 interface RenderPoint {
   harvester: Harvester;
@@ -91,7 +92,7 @@ export class Render {
     const { gl } = this.renderContext;
     gl.clear(gl.COLOR_BUFFER_BIT);
     const cameraMatrix = (this.map as any)._impl.modules.renderer.vpMatrix;
-    // this.lineBatch.render(cameraMatrix, this.map.getSize(), this.map.getZoom());
+    this.lineBatch.render(cameraMatrix, this.map.getSize(), this.map.getZoom());
     this.pointBatch.render(cameraMatrix, this.map.getSize(), this.map.getZoom());
   }
 

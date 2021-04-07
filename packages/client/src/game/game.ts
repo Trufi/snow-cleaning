@@ -85,6 +85,8 @@ export class Game {
       this.graph.max,
     );
 
+    this.render.setLines(this.graph.edges, this.graph.min, this.graph.max);
+
     requestAnimationFrame(this.gameLoop);
   }
 
@@ -98,6 +100,13 @@ export class Game {
       Object.assign(gamePlayer.harvester, harvester);
       gamePlayer.harvester.edge = harvester.edgeIndex !== -1 ? this.graph.edges[harvester.edgeIndex] : undefined;
     });
+
+    for (const key in data.pollution) {
+      const index = Number(key);
+      this.graph.edges[index].pollution = data.pollution[key];
+    }
+
+    this.render.updateLines(this.graph.edges);
   }
 
   public goToPoint(mapPoint: number[]): Cmd {
