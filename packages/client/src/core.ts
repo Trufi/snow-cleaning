@@ -73,6 +73,16 @@ class InGameState {
         this.game.updatePollutionFromServer(serverMsg);
         break;
       }
+
+      case 'playerEnter': {
+        this.game.addPlayer(serverMsg);
+        break;
+      }
+
+      case 'playerLeave': {
+        this.game.removePlayer(serverMsg);
+        break;
+      }
     }
   };
 

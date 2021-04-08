@@ -13,10 +13,10 @@ const map = new mapgl.Map('map', {
 });
 
 const iconSize: Array<[number, number]> = [
-  [8, 8],
-  [10, 10],
-  [15, 13],
-  [16, 15],
+  [8, 10],
+  [10, 15],
+  [15, 18],
+  [16, 20],
 ];
 
 function getCircleIcon(color: string, radius: number, color2 = '#000', radius2 = 0): string {
@@ -33,7 +33,7 @@ const icons: SimulationIcons = {
   virgin: {
     width: iconSize,
     height: iconSize,
-    url: getCircleIcon('#ff0000', 10, '#ffffff', 8),
+    url: getCircleIcon('#0089ff', 10, '#ffffff', 5),
   },
 };
 

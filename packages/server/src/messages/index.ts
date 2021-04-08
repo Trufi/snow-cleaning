@@ -54,24 +54,13 @@ const restartData = (game: GameState) => {
 };
 
 const playerEnter = (player: GamePlayer) => ({
-  type: 'playerEnter' as 'playerEnter',
+  type: 'playerEnter' as const,
   player: getPlayerData(player),
 });
 
-const playerNewBody = (player: GamePlayer) => ({
-  type: 'playerNewBody' as 'playerNewBody',
-  playerId: player.id,
-});
-
 const playerLeave = (playerId: string) => ({
-  type: 'playerLeave' as 'playerLeave',
+  type: 'playerLeave' as const,
   playerId,
-});
-
-const playerDeath = (playerId: number, causePlayerId: number) => ({
-  type: 'playerDeath' as 'playerDeath',
-  playerId,
-  causePlayerId,
 });
 
 const tickData = (game: GameState) => {
@@ -112,9 +101,7 @@ export const msg = {
   gameJoinFail,
   startData,
   playerEnter,
-  playerNewBody,
   playerLeave,
-  playerDeath,
   tickData,
   pollutionData,
   pong,

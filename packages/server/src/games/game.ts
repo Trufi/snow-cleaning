@@ -90,13 +90,16 @@ export class Game {
     };
     this.state.players.set(id, gamePlayer);
 
-    return [cmd.sendMsg(id, msg.startData(this.state, gamePlayer))];
+    return [
+      cmd.sendMsg(id, msg.startData(this.state, gamePlayer)),
+      cmd.sendMsgToAllInGame(msg.playerEnter(gamePlayer)),
+    ];
   }
 
   public removePlayer(id: string): Cmd {
     this.state.players.delete(id);
 
-    return cmd.sendMsgTo(getTickBodyRecipientIds(this.state), msg.playerLeave(id));
+    return cmd.sendMsgToAllInGame(msg.playerLeave(id));
   }
 
   public setPlayerRoute(playerId: string, data: ClientMsg['newRoute']): Cmd {

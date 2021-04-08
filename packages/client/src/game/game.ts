@@ -1,12 +1,12 @@
 import { ClientGraph, ClientGraphEdge, ClientGraphVertex, prepareGraph } from '@game/data/clientGraph';
 import { ServerMsg } from '@game/server/messages';
 import { mapMap } from '@game/utils';
-import { vec2dist, vec2lerp } from '@game/utils/vec2';
+import { vec2dist } from '@game/utils/vec2';
 import { cmd, Cmd } from '../commands';
 import { drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
-import { projectGeoToMap, projectMapToGeo } from '../utils';
+import { projectMapToGeo } from '../utils';
 import { pathFind } from './pathfind';
 
 const rawGraph = require('../../assets/novosibirsk.json');
@@ -80,15 +80,47 @@ export class Game {
       currentPlayer: players.get(startData.playerId) as GamePlayer, // TODO: обработать бы
     };
 
-    this.render.setPoints(
-      mapMap(this.state.players, (p) => p.harvester),
-      this.graph.min,
-      this.graph.max,
-    );
+    this.updatePointsSize();
 
     this.render.setLines(this.graph.edges, this.graph.min, this.graph.max);
 
     requestAnimationFrame(this.gameLoop);
+  }
+
+  public addPlayer(data: ServerMsg['playerEnter']) {
+    const { player } = data;
+    if (this.state.currentPlayer.id === player.id) {
+      return;
+    }
+
+    if (this.state.players.has(player.id)) {
+      console.error('Такой игрок уже есть!');
+      return;
+    }
+
+    const harvester: Harvester = {
+      ...player.harvester,
+      edge: this.graph.edges[player.harvester.edgeIndex],
+    };
+
+    const gamePlayer: GamePlayer = {
+      id: player.id,
+      name: player.name,
+      harvester,
+    };
+
+    this.state.players.set(player.id, gamePlayer);
+
+    this.updatePointsSize();
+  }
+
+  public removePlayer(data: ServerMsg['playerLeave']) {
+    const player = this.state.players.get(data.playerId);
+    if (!player) {
+      return;
+    }
+    this.state.players.delete(player.id);
+    this.updatePointsSize();
   }
 
   public updateFromServer(data: ServerMsg['tickData']) {
@@ -139,6 +171,14 @@ export class Game {
 
     this.render.render();
   };
+
+  private updatePointsSize() {
+    this.render.setPoints(
+      mapMap(this.state.players, (p) => p.harvester),
+      this.graph.min,
+      this.graph.max,
+    );
+  }
 }
 
 function findNearestGraphVertex(graph: ClientGraph, point: number[]) {
