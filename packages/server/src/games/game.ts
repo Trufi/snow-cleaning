@@ -86,6 +86,7 @@ export class Game {
       id,
       userId,
       name,
+      score: 0,
       harvester,
     };
     this.state.players.set(id, gamePlayer);
@@ -183,6 +184,7 @@ function polluteRoads(graph: ClientGraph, state: GameState) {
 function cleanRoads(_graph: ClientGraph, state: GameState) {
   state.players.forEach((player) => {
     if (player.harvester.edge) {
+      player.score += player.harvester.edge.pollution;
       player.harvester.edge.pollution = 0;
     }
   });

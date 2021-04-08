@@ -31,6 +31,8 @@ export interface GamePlayer {
   userId: number;
   name: string;
 
+  score: number;
+
   harvester: Harvester;
 }
 

@@ -6,6 +6,7 @@ import { cmd, Cmd } from '../commands';
 import { drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
+import { renderUI } from '../renderUI';
 import { projectMapToGeo } from '../utils';
 import { pathFind } from './pathfind';
 
@@ -39,6 +40,7 @@ export interface Harvester {
 export interface GamePlayer {
   id: string;
   name: string;
+  score: number;
   harvester: Harvester;
 }
 
@@ -67,6 +69,7 @@ export class Game {
       const gamePlayer: GamePlayer = {
         id: player.id,
         name: player.name,
+        score: player.score,
         harvester,
       };
 
@@ -106,6 +109,7 @@ export class Game {
     const gamePlayer: GamePlayer = {
       id: player.id,
       name: player.name,
+      score: player.score,
       harvester,
     };
 
@@ -124,17 +128,21 @@ export class Game {
   }
 
   public updateFromServer(data: ServerMsg['tickData']) {
-    data.harvesters.forEach((harvester) => {
-      const gamePlayer = this.state.players.get(harvester.playerId);
+    data.players.forEach((player) => {
+      const gamePlayer = this.state.players.get(player.id);
       if (!gamePlayer) {
         return;
       }
 
-      Object.assign(gamePlayer.harvester, harvester);
-      gamePlayer.harvester.edge = harvester.edgeIndex !== -1 ? this.graph.edges[harvester.edgeIndex] : undefined;
+      Object.assign(gamePlayer.harvester, player.harvester);
+      gamePlayer.harvester.edge =
+        player.harvester.edgeIndex !== -1 ? this.graph.edges[player.harvester.edgeIndex] : undefined;
+
+      gamePlayer.score = player.score;
     });
 
     this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
+    renderUI(this.state);
   }
 
   public updatePollutionFromServer(data: ServerMsg['pollutionData']) {
