@@ -23,6 +23,7 @@ export class Game {
       prevTime: options.currentTime,
       time: options.currentTime,
       lastPolluteTime: options.currentTime,
+      lastPollutionClientUpdateTime: options.currentTime,
       duration: options.duration,
       maxPlayers: options.duration,
       players: new Map(),
@@ -47,7 +48,12 @@ export class Game {
     cleanRoads(this.graph, this.state);
 
     // cmds.push(cmd.sendPbfMsgTo(getTickBodyRecipientIds(this.state), pbfMsg.tickData(this.state)));
-    cmds.push(cmd.sendMsgTo(getTickBodyRecipientIds(this.state), msg.tickData(this.state, this.graph)));
+    cmds.push(cmd.sendMsgTo(getTickBodyRecipientIds(this.state), msg.tickData(this.state)));
+
+    if (time - this.state.lastPollutionClientUpdateTime > config.clientPollutionUpdateInterval) {
+      this.state.lastPollutionClientUpdateTime = time;
+      cmds.push(cmd.sendMsgTo(getTickBodyRecipientIds(this.state), msg.pollutionData(this.graph)));
+    }
 
     if (needToRestart(this.state)) {
       console.log(`Restart game!`);

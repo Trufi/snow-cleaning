@@ -74,7 +74,14 @@ const playerDeath = (playerId: number, causePlayerId: number) => ({
   causePlayerId,
 });
 
-const tickData = (game: GameState, graph: ClientGraph) => {
+const tickData = (game: GameState) => {
+  return {
+    type: 'tickData' as const,
+    harvesters: mapMap(game.players, (player) => getHarvesterData(player.harvester)),
+  };
+};
+
+const pollutionData = (graph: ClientGraph) => {
   const changedEdges: { [index: string]: number } = {};
   graph.edges.forEach((edge, index) => {
     const pollution = round(edge.pollution, 1);
@@ -84,9 +91,8 @@ const tickData = (game: GameState, graph: ClientGraph) => {
   });
 
   return {
-    type: 'tickData' as const,
-    harvesters: mapMap(game.players, (player) => getHarvesterData(player.harvester)),
-    pollution: changedEdges,
+    type: 'pollution' as const,
+    changedEdges,
   };
 };
 
@@ -110,6 +116,7 @@ export const msg = {
   playerLeave,
   playerDeath,
   tickData,
+  pollutionData,
   pong,
   restartAt,
   restartData,

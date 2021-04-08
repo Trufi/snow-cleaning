@@ -1,11 +1,12 @@
 import { ClientGraph, ClientGraphEdge, ClientGraphVertex, prepareGraph } from '@game/data/clientGraph';
 import { ServerMsg } from '@game/server/messages';
 import { mapMap } from '@game/utils';
-import { vec2dist } from '@game/utils/vec2';
+import { vec2dist, vec2lerp } from '@game/utils/vec2';
 import { cmd, Cmd } from '../commands';
 import { drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
+import { projectGeoToMap, projectMapToGeo } from '../utils';
 import { pathFind } from './pathfind';
 
 const rawGraph = require('../../assets/novosibirsk.json');
@@ -101,9 +102,13 @@ export class Game {
       gamePlayer.harvester.edge = harvester.edgeIndex !== -1 ? this.graph.edges[harvester.edgeIndex] : undefined;
     });
 
-    for (const key in data.pollution) {
+    this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
+  }
+
+  public updatePollutionFromServer(data: ServerMsg['pollutionData']) {
+    for (const key in data.changedEdges) {
       const index = Number(key);
-      this.graph.edges[index].pollution = data.pollution[key];
+      this.graph.edges[index].pollution = data.changedEdges[key];
     }
 
     this.render.updateLines(this.graph.edges);

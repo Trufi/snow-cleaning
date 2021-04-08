@@ -51,8 +51,9 @@ class InGameState {
     messageHandlers.onMessage = this.onServerMessage;
     this.game = new Game(render, startData);
 
-    this.render.map.on('click', (ev) => {
-      const point = projectGeoToMap(ev.lngLat);
+    document.getElementById('map')?.addEventListener('click', (ev) => {
+      const lngLat = this.render.map.unproject([ev.clientX, ev.clientY]);
+      const point = projectGeoToMap(lngLat);
       this.executeCmd(this.game.goToPoint(point));
     });
   }
@@ -65,6 +66,11 @@ class InGameState {
     switch (serverMsg.type) {
       case 'tickData': {
         this.game.updateFromServer(serverMsg);
+        break;
+      }
+
+      case 'pollution': {
+        this.game.updatePollutionFromServer(serverMsg);
         break;
       }
     }

@@ -6,9 +6,6 @@ import { Harvester } from './types';
 
 export function createHarvester(playerId: string, graph: ClientGraph) {
   const vertexFrom = graph.vertices[Math.floor(random() * graph.vertices.length)];
-  // const edge = vertexFrom.edges[Math.floor(random() * vertexFrom.edges.length)];
-
-  // const forward = edge.a === vertexFrom;
 
   const harvester: Harvester = {
     playerId,

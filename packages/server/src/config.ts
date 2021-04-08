@@ -7,7 +7,7 @@ export const config = {
   port: process.env.GAME_SERVER_PORT || 3001,
   clientsCheckInterval: 30000,
 
-  serverGameStep: 50,
+  serverGameStep: 30,
   clientSendChangesInterval: 100,
   clientPingInterval: 500,
   smoothPingTime: 2000,
@@ -19,4 +19,5 @@ export const config = {
   discardMessageThreshold: 1000,
 
   polluteInterval: 100,
+  clientPollutionUpdateInterval: 500,
 };

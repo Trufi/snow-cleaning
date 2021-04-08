@@ -30,6 +30,7 @@ export function drawRoute(map: mapgl.Map, path: ClientGraphVertex[]) {
     path: new mapgl.Polyline(map, {
       coordinates: path.map((vertex) => projectMapToGeo(vertex.coords)),
       width: 10,
+      color: '#3388ff77',
     }),
   };
 }
