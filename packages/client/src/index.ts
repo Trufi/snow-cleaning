@@ -1,5 +1,6 @@
 /// <reference path="../node_modules/@2gis/mapgl/global.d.ts" />
 
+import { Snow } from 'mapgl-snow';
 import { InitialState } from './core';
 import { Render } from './map/render';
 import { SimulationIcons } from './types';
@@ -38,5 +39,7 @@ const icons: SimulationIcons = {
 };
 
 const render = new Render(map, icons);
+
+new Snow(map as any);
 
 new InitialState(render);
