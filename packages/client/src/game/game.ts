@@ -7,7 +7,7 @@ import { drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
 import { renderUI } from '../renderUI';
-import { projectMapToGeo } from '../utils';
+// import { projectMapToGeo } from '../utils';
 import { pathFind } from './pathfind';
 
 const rawGraph = require('../../assets/novosibirsk.json');
@@ -141,7 +141,7 @@ export class Game {
       gamePlayer.score = player.score;
     });
 
-    this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
+    // this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
     renderUI(this.state);
   }
 

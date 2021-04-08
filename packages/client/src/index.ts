@@ -5,13 +5,13 @@ import { InitialState } from './core';
 import { Render } from './map/render';
 import { SimulationIcons } from './types';
 
-const map = new mapgl.Map('map', {
+const map = ((window as any).map = new mapgl.Map('map', {
   center: [82.9412, 55.0104],
   zoom: 14,
   key: '042b5b75-f847-4f2a-b695-b5f58adc9dfd',
   zoomControl: false,
   style: '1db52c6e-66b6-4c99-9c83-5538fa962d43',
-});
+}));
 
 const iconSize: Array<[number, number]> = [
   [8, 10],

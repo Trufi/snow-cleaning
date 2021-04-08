@@ -4,5 +4,9 @@
   "scripts": {},
   "devDependencies": {
     "prettier": "^2.2.1"
+  },
+  "dependencies": {
+    "@types/fs-extra": "^9.0.10",
+    "fs-extra": "^9.1.0"
   }
 }
