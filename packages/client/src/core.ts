@@ -1,4 +1,5 @@
 import { AnyServerMsg, ServerMsg } from '@game/server/messages';
+import { ClientGraph } from '@game/data/clientGraph';
 import { Transport, TransportProps } from './transport';
 import { msg } from './messages';
 import { Game } from './game/game';
@@ -11,14 +12,14 @@ export class InitialState {
   private messageHandlers: TransportProps;
   private transport: Transport;
 
-  constructor(private render: Render) {
+  constructor(private graph: ClientGraph, private render: Render, serverURL: string) {
     this.messageHandlers = {
       onOpen: () => console.log('open'),
       onMessage: this.onServerMessage,
       onClose: () => console.log('close'),
     };
 
-    this.transport = new Transport('localhost:3001', this.messageHandlers);
+    this.transport = new Transport(serverURL, this.messageHandlers);
   }
 
   private onServerMessage = (serverMsg: AnyServerMsg) => {
@@ -31,7 +32,7 @@ export class InitialState {
       }
 
       case 'startData': {
-        new InGameState(this.messageHandlers, this.transport, this.render, serverMsg);
+        new InGameState(this.messageHandlers, this.transport, this.graph, this.render, serverMsg);
         break;
       }
     }
@@ -45,11 +46,12 @@ class InGameState {
   constructor(
     messageHandlers: TransportProps,
     private transport: Transport,
+    private graph: ClientGraph,
     private render: Render,
     startData: ServerMsg['startData'],
   ) {
     messageHandlers.onMessage = this.onServerMessage;
-    this.game = new Game(render, startData);
+    this.game = new Game(this.graph, render, startData);
 
     document.getElementById('map')?.addEventListener('click', (ev) => {
       const lngLat = this.render.map.unproject([ev.clientX, ev.clientY]);

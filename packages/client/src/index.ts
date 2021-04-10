@@ -1,5 +1,6 @@
 /// <reference path="../node_modules/@2gis/mapgl/global.d.ts" />
 
+import { prepareGraph } from '@game/data/clientGraph';
 import { Snow } from 'mapgl-snow';
 import { InitialState } from './core';
 import { Render } from './map/render';
@@ -12,6 +13,8 @@ const map = ((window as any).map = new mapgl.Map('map', {
   zoomControl: false,
   style: '1db52c6e-66b6-4c99-9c83-5538fa962d43',
 }));
+
+window.addEventListener('resize', () => map.invalidateSize());
 
 const iconSize: Array<[number, number]> = [
   [8, 10],
@@ -42,4 +45,12 @@ const render = new Render(map, icons);
 
 new Snow(map as any);
 
-new InitialState(render);
+const serverURL = 'localhost:3001';
+
+fetch(`http://${serverURL}/assets/novosibirsk.json`)
+  .then((res) => res.json())
+  .then((rawGraph: any) => {
+    const graph = prepareGraph(rawGraph);
+
+    new InitialState(graph, render, serverURL);
+  });

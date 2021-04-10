@@ -1,4 +1,4 @@
-import { ClientGraph, ClientGraphEdge, ClientGraphVertex, prepareGraph } from '@game/data/clientGraph';
+import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 import { ServerMsg } from '@game/server/messages';
 import { mapMap } from '@game/utils';
 import { vec2dist } from '@game/utils/vec2';
@@ -7,10 +7,8 @@ import { drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
 import { renderUI } from '../renderUI';
-// import { projectMapToGeo } from '../utils';
+import { projectMapToGeo } from '../utils';
 import { pathFind } from './pathfind';
-
-const rawGraph = require('../../assets/novosibirsk.json');
 
 export interface Harvester {
   playerId: string;
@@ -52,11 +50,9 @@ export interface GameState {
 }
 
 export class Game {
-  private graph: ClientGraph;
   private state: GameState;
 
-  constructor(private render: Render, startData: ServerMsg['startData']) {
-    this.graph = prepareGraph(rawGraph);
+  constructor(private graph: ClientGraph, private render: Render, startData: ServerMsg['startData']) {
     const time = Date.now();
 
     const players: GameState['players'] = new Map();
@@ -141,7 +137,7 @@ export class Game {
       gamePlayer.score = player.score;
     });
 
-    // this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
+    this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
     renderUI(this.state);
   }
 

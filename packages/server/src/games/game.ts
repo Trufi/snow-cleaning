@@ -34,7 +34,7 @@ export class Game {
       },
     };
 
-    this.graph = prepareGraph(require('../../assets/novosibirsk.json'));
+    this.graph = prepareGraph(require('../../../newdata/assets/novosibirsk.json'));
   }
 
   public update(time: number): Cmd {
