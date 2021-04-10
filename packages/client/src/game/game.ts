@@ -3,11 +3,11 @@ import { ServerMsg } from '@game/server/messages';
 import { mapMap } from '@game/utils';
 import { vec2dist } from '@game/utils/vec2';
 import { cmd, Cmd } from '../commands';
-import { drawRoute } from '../map/drawRoute';
+import { drawMarker, drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
 import { renderUI } from '../renderUI';
-import { projectMapToGeo } from '../utils';
+// import { projectMapToGeo } from '../utils';
 import { pathFind } from './pathfind';
 
 export interface Harvester {
@@ -137,7 +137,7 @@ export class Game {
       gamePlayer.score = player.score;
     });
 
-    this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
+    // this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
     renderUI(this.state);
   }
 
@@ -155,6 +155,9 @@ export class Game {
 
     // TODO: мы и так знаем, где находится игрок сейчас, надо выбрать вершину из двух
     const fromVertex = findNearestGraphVertex(this.graph, this.state.currentPlayer.harvester.coords);
+
+    console.log('click', toVertex);
+    drawMarker(this.render.map, toVertex.coords);
 
     const path = pathFind(fromVertex, toVertex);
     if (!path) {

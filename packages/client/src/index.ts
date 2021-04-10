@@ -52,5 +52,12 @@ fetch(`http://${serverURL}/assets/novosibirsk.json`)
   .then((rawGraph: any) => {
     const graph = prepareGraph(rawGraph);
 
+    // graph.vertices.forEach((vertex) => {
+    //   new mapgl.Label(map, {
+    //     coordinates: projectMapToGeo(vertex.coords),
+    //     text: String(vertex.index),
+    //   });
+    // });
+
     new InitialState(graph, render, serverURL);
   });

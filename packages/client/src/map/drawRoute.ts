@@ -34,3 +34,11 @@ export function drawRoute(map: mapgl.Map, path: ClientGraphVertex[]) {
     }),
   };
 }
+
+let marker: mapgl.Marker | undefined;
+export function drawMarker(map: mapgl.Map, mapPoint: number[]) {
+  marker?.destroy();
+  marker = new mapgl.Marker(map, {
+    coordinates: projectMapToGeo(mapPoint),
+  });
+}

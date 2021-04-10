@@ -62,7 +62,7 @@ class InGameState {
 
   private onServerMessage = (serverMsg: AnyServerMsg) => {
     if (serverMsg.type !== 'tickData') {
-      console.log('message', serverMsg);
+      // console.log('message', serverMsg);
     }
 
     switch (serverMsg.type) {
