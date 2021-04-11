@@ -27,7 +27,7 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
     passed: 0,
     edgeStartTime: 0,
 
-    speed: 10,
+    speed: 100,
   };
 
   return harvester;
@@ -83,6 +83,8 @@ export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: 
   const { position } = harvester;
 
   const passedDistanceInEdge = harvester.speed * (now - harvester.edgeStartTime);
+
+  harvester.edgeStartTime = now;
   const dx = passedDistanceInEdge / position.edge.length;
 
   const isFinalRouteEdge = harvester.edgeIndexInRoute === harvester.route.vertices.length - 2;
@@ -115,21 +117,13 @@ export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: 
         harvester.route.vertices[harvester.edgeIndexInRoute],
         harvester.route.vertices[harvester.edgeIndexInRoute + 1],
       );
-      console.log(
-        `passed ${position.edge.length} by ${now - harvester.edgeStartTime}, speed: ${
-          (now - harvester.edgeStartTime) / position.edge.length
-        }`,
-      );
       if (maybeEdge) {
         position.at = maybeEdge.forward ? 0 : 1;
         position.edge = maybeEdge.edge;
         harvester.forward = maybeEdge.forward;
-        harvester.edgeStartTime = now;
       } else {
         console.log(`Не найдена следующая кривая пути игрока ${harvester.playerId}`);
       }
     }
   }
-
-  console.log(harvester.forward, position.edge.index, position.at, endAt, remain);
 }

@@ -5,7 +5,6 @@ import { Snow } from 'mapgl-snow';
 import { InitialState } from './core';
 import { Render } from './map/render';
 import { SimulationIcons } from './types';
-import { projectMapToGeo } from './utils';
 
 const map = ((window as any).map = new mapgl.Map('map', {
   center: [82.9412, 55.0104],
@@ -53,12 +52,12 @@ fetch(`http://${serverURL}/assets/novosibirsk.json`)
   .then((rawGraph: any) => {
     const graph = prepareGraph(rawGraph);
 
-    graph.vertices.forEach((vertex) => {
-      new mapgl.Label(map, {
-        coordinates: projectMapToGeo(vertex.coords),
-        text: String(vertex.index),
-      });
-    });
+    // graph.vertices.forEach((vertex) => {
+    //   new mapgl.Label(map, {
+    //     coordinates: projectMapToGeo(vertex.coords),
+    //     text: String(vertex.index),
+    //   });
+    // });
 
     new InitialState(graph, render, serverURL);
   });
