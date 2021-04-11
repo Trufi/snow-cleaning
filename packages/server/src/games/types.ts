@@ -6,7 +6,7 @@ export interface Harvester {
 
   route: ClientGraphVertex[];
   edgeIndexInRoute: number;
-  edge: ClientGraphEdge | undefined;
+  edge: ClientGraphEdge;
 
   speed: number;
 

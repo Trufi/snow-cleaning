@@ -1,6 +1,7 @@
+import RBush from 'rbush';
 import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 import { ServerMsg } from '@game/server/messages';
-import { mapMap } from '@game/utils';
+import { mapMap, getClosestPointOnLineSegment } from '@game/utils';
 import { vec2dist } from '@game/utils/vec2';
 import { cmd, Cmd } from '../commands';
 import { drawMarker, drawRoute } from '../map/drawRoute';
@@ -8,12 +9,13 @@ import { Render } from '../map/render';
 import { msg } from '../messages';
 import { renderUI } from '../renderUI';
 // import { projectMapToGeo } from '../utils';
-import { pathFind } from './pathfind';
+import { pathFindFromMidway } from './pathfind';
+import { Position } from '../types';
 
 export interface Harvester {
   playerId: string;
   forward: boolean;
-  edge: ClientGraphEdge | undefined;
+  edge: ClientGraphEdge;
   speed: number;
 
   /**
@@ -51,6 +53,7 @@ export interface GameState {
 
 export class Game {
   private state: GameState;
+  private graphVerticesTree: RBush<{ vertex: ClientGraphVertex }>;
 
   constructor(private graph: ClientGraph, private render: Render, startData: ServerMsg['startData']) {
     const time = Date.now();
@@ -78,6 +81,9 @@ export class Game {
       players,
       currentPlayer: players.get(startData.playerId) as GamePlayer, // TODO: обработать бы
     };
+
+    this.graphVerticesTree = new RBush();
+    this.graphVerticesTree.load(this.graph.vertices.map((vertex) => createPoint(vertex.coords, vertex)));
 
     this.updatePointsSize();
 
@@ -131,8 +137,10 @@ export class Game {
       }
 
       Object.assign(gamePlayer.harvester, player.harvester);
-      gamePlayer.harvester.edge =
-        player.harvester.edgeIndex !== -1 ? this.graph.edges[player.harvester.edgeIndex] : undefined;
+
+      if (player.harvester.edgeIndex !== -1) {
+        gamePlayer.harvester.edge = this.graph.edges[player.harvester.edgeIndex];
+      }
 
       gamePlayer.score = player.score;
     });
@@ -151,15 +159,21 @@ export class Game {
   }
 
   public goToPoint(mapPoint: number[]): Cmd {
-    const toVertex = findNearestGraphVertex(this.graph, mapPoint);
+    const toPosition = findNearestGraphVertex(this.graph, this.graphVerticesTree, mapPoint);
+    if (!toPosition) {
+      return;
+    }
 
-    // TODO: мы и так знаем, где находится игрок сейчас, надо выбрать вершину из двух
-    const fromVertex = findNearestGraphVertex(this.graph, this.state.currentPlayer.harvester.coords);
+    drawMarker(this.render.map, toPosition.coords);
 
-    console.log('click', toVertex);
-    drawMarker(this.render.map, toVertex.coords);
-
-    const path = pathFind(fromVertex, toVertex);
+    const harvester = this.state.currentPlayer.harvester;
+    const fromPosition: Position = {
+      edge: harvester.edge,
+      segmentIndex: harvester.edgeSegment,
+      t: harvester.positionAtSegment,
+      coords: harvester.coords,
+    };
+    const path = pathFindFromMidway(fromPosition, toPosition);
     if (!path) {
       return;
     }
@@ -188,17 +202,61 @@ export class Game {
   }
 }
 
-function findNearestGraphVertex(graph: ClientGraph, point: number[]) {
-  let minDistance = Infinity;
-  let nearestVertex: ClientGraphVertex = graph.vertices[0];
+function findNearestGraphVertex(
+  graph: ClientGraph,
+  graphVerticesTree: RBush<{ vertex: ClientGraphVertex }>,
+  point: number[],
+) {
+  const offset = 131072; // половина размера тайла 14-го зума
 
-  for (const vertex of graph.vertices) {
-    const dist = vec2dist(point, vertex.coords);
-    if (minDistance > dist) {
-      minDistance = dist;
-      nearestVertex = vertex;
+  const vertices = graphVerticesTree.search(createPointBBox(point, offset)).map((res) => res.vertex);
+  const edgeIndices = new Set<number>();
+  for (const vertex of vertices) {
+    for (const edge of vertex.edges) {
+      edgeIndices.add(edge.index);
     }
   }
 
-  return nearestVertex;
+  let minDistance = offset;
+  let nearest: Position | undefined;
+
+  edgeIndices.forEach((index) => {
+    const edge = graph.edges[index];
+
+    for (let i = 0; i < edge.geometry.length - 1; i++) {
+      const closestPoint = getClosestPointOnLineSegment(point, edge.geometry[i], edge.geometry[i + 1]);
+      const distance = vec2dist(point, closestPoint.point);
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = {
+          edge,
+          segmentIndex: i,
+          t: closestPoint.t,
+          coords: closestPoint.point,
+        };
+      }
+    }
+  });
+
+  return nearest;
+}
+
+function createPoint(point: number[], vertex: ClientGraphVertex) {
+  return {
+    minX: point[0],
+    minY: point[1],
+    maxX: point[0],
+    maxY: point[1],
+    vertex,
+  };
+}
+
+function createPointBBox(point: number[], offset: number) {
+  return {
+    minX: point[0] - offset,
+    minY: point[1] - offset,
+    maxX: point[0] + offset,
+    maxY: point[1] + offset,
+  };
 }

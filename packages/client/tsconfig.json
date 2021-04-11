@@ -3,6 +3,7 @@
   "compilerOptions": {
     "types": ["@2gis/gl-matrix", "2gl", "node"],
     "module": "ES6",
-    "lib": ["ES2020", "DOM"]
+    "lib": ["ES2020", "DOM"],
+    "esModuleInterop": true
   }
 }

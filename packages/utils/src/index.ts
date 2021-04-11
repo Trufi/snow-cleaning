@@ -54,3 +54,34 @@ export function degToRad(degrees: number): number {
 export function radToDeg(radians: number): number {
   return (radians / Math.PI) * 180;
 }
+
+export function getClosestPointOnLineSegment(point: number[], point1: number[], point2: number[]) {
+  const A = point[0] - point1[0];
+  const B = point[1] - point1[1];
+  const C = point2[0] - point1[0];
+  const D = point2[1] - point1[1];
+
+  const dot = A * C + B * D;
+  const lengthSquared = C * C + D * D;
+  const param = lengthSquared !== 0 ? dot / lengthSquared : 0;
+
+  if (param < 0) {
+    return {
+      type: 'first' as const,
+      point: point1,
+      t: 0,
+    };
+  } else if (param > 1) {
+    return {
+      type: 'second' as const,
+      point: point2,
+      t: 1,
+    };
+  } else {
+    return {
+      type: 'new' as const,
+      point: [Math.round(point1[0] + param * C), Math.round(point1[1] + param * D)],
+      t: param,
+    };
+  }
+}

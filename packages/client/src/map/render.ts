@@ -24,6 +24,7 @@ export class Render {
     this.canvas.style.top = '0';
     this.canvas.style.pointerEvents = 'none';
     this.canvas.style.background = 'transparent';
+    this.canvas.style.opacity = String(0.5);
     // map.getContainer().appendChild(this.canvas);
     (map as any)._impl.getContainer().appendChild(this.canvas);
 

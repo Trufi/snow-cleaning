@@ -12,7 +12,7 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
 
     route: [vertexFrom],
     edgeIndexInRoute: 0,
-    edge: undefined,
+    edge: vertexFrom.edges[0],
     forward: false,
 
     edgeSegment: 0,
@@ -29,7 +29,7 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
 
 export function setHarvesterRoute(harvester: Harvester, now: number, route: ClientGraphVertex[]) {
   harvester.route = route;
-  harvester.edge = undefined;
+  harvester.edge = route[0].edges[0];
   harvester.edgeIndexInRoute = 0;
   harvester.edgeSegment = 0;
   harvester.passed = 0;
@@ -94,7 +94,7 @@ export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: 
 
   if (ended) {
     harvester.edgeIndexInRoute++;
-    harvester.edge = undefined;
+    // harvester.edge = undefined;
 
     if (harvester.edgeIndexInRoute + 1 < harvester.route.length) {
       const maybeFoundEdge = findEdge(
