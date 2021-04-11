@@ -1,9 +1,9 @@
 import { ClientGraph, ClientGraphVertex } from '@game/data/clientGraph';
-import { random } from '../utils';
+// import { random } from '../utils';
 import { Harvester } from './types';
 
 export function createHarvester(playerId: string, graph: ClientGraph) {
-  const vertexFrom = graph.vertices[Math.floor(random() * graph.vertices.length)];
+  const vertexFrom = graph.vertices[2487]; // Math.floor(random() * graph.vertices.length)];
 
   const edge = vertexFrom.edges[0];
   const forward = edge.a === vertexFrom;
@@ -27,7 +27,7 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
     passed: 0,
     edgeStartTime: 0,
 
-    speed: 100,
+    speed: 10,
   };
 
   return harvester;
@@ -82,36 +82,54 @@ function findEdge(fromVertex: ClientGraphVertex, toVertex: ClientGraphVertex) {
 export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: number) {
   const { position } = harvester;
 
-  let distance = harvester.speed * (now - harvester.edgeStartTime);
+  const passedDistanceInEdge = harvester.speed * (now - harvester.edgeStartTime);
+  const dx = passedDistanceInEdge / position.edge.length;
 
   const isFinalRouteEdge = harvester.edgeIndexInRoute === harvester.route.vertices.length - 2;
+  if (isFinalRouteEdge && position.at === harvester.route.toAt) {
+    return;
+  }
 
-  let remainDistance: number;
+  let endAt: number;
   if (isFinalRouteEdge) {
-    remainDistance = Math.abs(harvester.route.toAt - position.at);
+    endAt = harvester.route.toAt;
   } else {
-    remainDistance = harvester.forward ? 1 - position.at : position.at;
+    endAt = harvester.forward ? 1 : 0;
   }
 
-  remainDistance *= position.edge.length;
-  remainDistance = remainDistance - distance;
+  let remain: number;
+  if (harvester.forward) {
+    position.at = position.at + dx;
+    remain = endAt - position.at;
+  } else {
+    position.at = position.at - dx;
+    remain = position.at - endAt;
+  }
 
-  if (remainDistance > 0) {
-    position.at = harvester.forward ? 1 - remainDistance / position.edge.length : remainDistance / position.edge.length;
-  } else if (!isFinalRouteEdge) {
-    harvester.edgeIndexInRoute++;
-
-    const maybeEdge = findEdge(
-      harvester.route.vertices[harvester.edgeIndexInRoute],
-      harvester.route.vertices[harvester.edgeIndexInRoute + 1],
-    );
-    if (!maybeEdge) {
-      console.log(`Не найдена следующая кривая пути игрока ${harvester.playerId}`);
-      return;
+  if (remain < 0) {
+    if (isFinalRouteEdge) {
+      position.at = harvester.route.toAt;
+    } else {
+      harvester.edgeIndexInRoute++;
+      const maybeEdge = findEdge(
+        harvester.route.vertices[harvester.edgeIndexInRoute],
+        harvester.route.vertices[harvester.edgeIndexInRoute + 1],
+      );
+      console.log(
+        `passed ${position.edge.length} by ${now - harvester.edgeStartTime}, speed: ${
+          (now - harvester.edgeStartTime) / position.edge.length
+        }`,
+      );
+      if (maybeEdge) {
+        position.at = maybeEdge.forward ? 0 : 1;
+        position.edge = maybeEdge.edge;
+        harvester.forward = maybeEdge.forward;
+        harvester.edgeStartTime = now;
+      } else {
+        console.log(`Не найдена следующая кривая пути игрока ${harvester.playerId}`);
+      }
     }
-    position.edge = maybeEdge.edge;
-
-    harvester.forward = maybeEdge.forward;
-    harvester.edgeStartTime = now;
   }
+
+  console.log(harvester.forward, position.edge.index, position.at, endAt, remain);
 }

@@ -57,24 +57,21 @@ export function createRandomFunction(seed: number) {
   };
 }
 
-export function getSegment(edge: ClientGraphEdge, forward: boolean, at: number) {
+export function getSegment(edge: ClientGraphEdge, at: number) {
   const { length, geometry } = edge;
   const distance = length * at;
 
   let passed = 0;
 
   for (let i = 0; i < geometry.length - 1; i++) {
-    const segmentA = forward ? geometry[i] : geometry[geometry.length - 1 - i];
-    const segmentB = forward ? geometry[i + 1] : geometry[geometry.length - 1 - (i + 1)];
-
-    const segmentLength = vec2dist(segmentA, segmentB);
-    const coords = [0, 0];
-    const directedPositionAtSegment = clamp((distance - passed) / segmentLength, 0, 1);
-    vec2lerp(coords, segmentA, segmentB, directedPositionAtSegment);
-    if (passed + segmentLength < distance) {
+    const segmentLength = vec2dist(geometry[i], geometry[i + 1]);
+    if (passed + segmentLength > distance) {
+      const coords = [0, 0];
+      const positionAtSegment = clamp((distance - passed) / segmentLength, 0, 1);
+      vec2lerp(coords, geometry[i], geometry[i + 1], positionAtSegment);
       return {
         segmentIndex: i,
-        positionAtSegment: forward ? directedPositionAtSegment : 1 - directedPositionAtSegment,
+        positionAtSegment,
         coords,
       };
     }

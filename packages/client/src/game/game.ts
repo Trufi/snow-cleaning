@@ -37,11 +37,7 @@ export interface GameState {
 
 function createHarvester(graph: ClientGraph, serverHarvester: PlayerData['harvester']) {
   const edge = graph.edges[serverHarvester.position.edgeIndex];
-  const { segmentIndex, coords, positionAtSegment } = getSegment(
-    edge,
-    serverHarvester.forward,
-    serverHarvester.position.at,
-  );
+  const { segmentIndex, coords, positionAtSegment } = getSegment(edge, serverHarvester.position.at);
   const harvester: Harvester = {
     ...serverHarvester,
     position: {
@@ -133,7 +129,7 @@ export class Game {
       }
 
       const edge = this.graph.edges[serverPlayer.harvester.position.edgeIndex];
-      const segment = getSegment(edge, true, serverPlayer.harvester.position.at);
+      const segment = getSegment(edge, serverPlayer.harvester.position.at);
 
       // Assign, а не спред, т.к. нельзя ссылку менять (хранится в рендере)
       Object.assign(gamePlayer.harvester, serverPlayer.harvester, {
