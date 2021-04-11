@@ -1,6 +1,6 @@
 import RBush from 'rbush';
 import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
-import { ServerMsg } from '@game/server/messages';
+import { PlayerData, ServerMsg } from '@game/server/messages';
 import { mapMap, getClosestPointOnLineSegment } from '@game/utils';
 import { vec2dist } from '@game/utils/vec2';
 import { cmd, Cmd } from '../commands';
@@ -11,30 +11,14 @@ import { renderUI } from '../renderUI';
 // import { projectMapToGeo } from '../utils';
 import { pathFindFromMidway } from './pathfind';
 import { Position } from '../types';
+import { getAtFromSegment, getSegment } from '../utils';
 
 export interface Harvester {
   playerId: string;
   forward: boolean;
-  edge: ClientGraphEdge;
   speed: number;
 
-  /**
-   * Индекс сегмента грани, с учетом направления,
-   * т.е. если точка едет с конфа (forward === false), то индекса будет считаться с конца
-   */
-  edgeSegment: number;
-  passed: number;
-
-  /**
-   * Описывает местоположение на текущем сегменте грани
-   * Задается от 0 до 1
-   * Не зависит от направления?
-   */
-  positionAtSegment: number;
-
-  edgeStartTime: number;
-
-  coords: number[];
+  position: Position;
 }
 
 export interface GamePlayer {
@@ -51,6 +35,26 @@ export interface GameState {
   currentPlayer: GamePlayer;
 }
 
+function createHarvester(graph: ClientGraph, serverHarvester: PlayerData['harvester']) {
+  const edge = graph.edges[serverHarvester.position.edgeIndex];
+  const { segmentIndex, coords, positionAtSegment } = getSegment(
+    edge,
+    serverHarvester.forward,
+    serverHarvester.position.at,
+  );
+  const harvester: Harvester = {
+    ...serverHarvester,
+    position: {
+      ...serverHarvester.position,
+      edge,
+      segmentIndex,
+      positionAtSegment,
+      coords,
+    },
+  };
+  return harvester;
+}
+
 export class Game {
   private state: GameState;
   private graphVerticesTree: RBush<{ vertex: ClientGraphVertex }>;
@@ -60,11 +64,7 @@ export class Game {
 
     const players: GameState['players'] = new Map();
     startData.players.forEach((player) => {
-      const harvester: Harvester = {
-        ...player.harvester,
-        edge: this.graph.edges[player.harvester.edgeIndex],
-      };
-
+      const harvester = createHarvester(this.graph, player.harvester);
       const gamePlayer: GamePlayer = {
         id: player.id,
         name: player.name,
@@ -103,11 +103,7 @@ export class Game {
       return;
     }
 
-    const harvester: Harvester = {
-      ...player.harvester,
-      edge: this.graph.edges[player.harvester.edgeIndex],
-    };
-
+    const harvester = createHarvester(this.graph, player.harvester);
     const gamePlayer: GamePlayer = {
       id: player.id,
       name: player.name,
@@ -130,19 +126,26 @@ export class Game {
   }
 
   public updateFromServer(data: ServerMsg['tickData']) {
-    data.players.forEach((player) => {
-      const gamePlayer = this.state.players.get(player.id);
+    data.players.forEach((serverPlayer) => {
+      const gamePlayer = this.state.players.get(serverPlayer.id);
       if (!gamePlayer) {
         return;
       }
 
-      Object.assign(gamePlayer.harvester, player.harvester);
+      const edge = this.graph.edges[serverPlayer.harvester.position.edgeIndex];
+      const segment = getSegment(edge, true, serverPlayer.harvester.position.at);
 
-      if (player.harvester.edgeIndex !== -1) {
-        gamePlayer.harvester.edge = this.graph.edges[player.harvester.edgeIndex];
-      }
+      // Assign, а не спред, т.к. нельзя ссылку менять (хранится в рендере)
+      Object.assign(gamePlayer.harvester, serverPlayer.harvester, {
+        position: {
+          ...gamePlayer.harvester.position,
+          ...serverPlayer.harvester.position,
+          edge,
+          coords: segment.coords,
+        },
+      });
 
-      gamePlayer.score = player.score;
+      gamePlayer.score = serverPlayer.score;
     });
 
     // this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
@@ -167,20 +170,14 @@ export class Game {
     drawMarker(this.render.map, toPosition.coords);
 
     const harvester = this.state.currentPlayer.harvester;
-    const fromPosition: Position = {
-      edge: harvester.edge,
-      segmentIndex: harvester.edgeSegment,
-      t: harvester.positionAtSegment,
-      coords: harvester.coords,
-    };
-    const path = pathFindFromMidway(fromPosition, toPosition);
+    const path = pathFindFromMidway(harvester.position, toPosition);
     if (!path) {
       return;
     }
 
     drawRoute(this.render.map, path);
 
-    return cmd.sendMsg(msg.newRoute(path));
+    return cmd.sendMsg(msg.newRoute(harvester.position, path, toPosition));
   }
 
   private gameLoop = () => {
@@ -218,7 +215,7 @@ function findNearestGraphVertex(
   }
 
   let minDistance = offset;
-  let nearest: Position | undefined;
+  let nearest: { edge: ClientGraphEdge; segmentIndex: number; positionAtSegment: number; coords: number[] } | undefined;
 
   edgeIndices.forEach((index) => {
     const edge = graph.edges[index];
@@ -232,14 +229,23 @@ function findNearestGraphVertex(
         nearest = {
           edge,
           segmentIndex: i,
-          t: closestPoint.t,
+          positionAtSegment: closestPoint.t,
           coords: closestPoint.point,
         };
       }
     }
   });
 
-  return nearest;
+  if (nearest) {
+    const position: Position = {
+      edge: nearest.edge,
+      segmentIndex: nearest.segmentIndex,
+      positionAtSegment: nearest.positionAtSegment,
+      coords: nearest.coords,
+      at: getAtFromSegment(nearest.edge, nearest.positionAtSegment, nearest.segmentIndex),
+    };
+    return position;
+  }
 }
 
 function createPoint(point: number[], vertex: ClientGraphVertex) {

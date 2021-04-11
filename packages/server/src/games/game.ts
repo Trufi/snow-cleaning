@@ -1,11 +1,11 @@
 import { ClientGraph, prepareGraph } from '@game/data/clientGraph';
 import { clamp, findMap, mapMap, mapToArray } from '@game/utils';
+import { ClientMsg } from '@game/client/messages';
 import { Cmd, cmd, union } from '../commands';
 import { msg } from '../messages';
 import { config } from '../config';
 import { GameState, GamePlayer, RestartData } from '../types';
 import { createHarvester, setHarvesterRoute, updateHarvester } from './harvester';
-import { ClientMsg } from '@game/client/messages';
 
 interface GameOptions {
   currentTime: number;
@@ -110,11 +110,11 @@ export class Game {
       return;
     }
 
+    // TODO: проверка, что путь валидный, а также что такие индексы вообще есть
+
     const route = data.vertexIndices.map((index) => this.graph.vertices[index]);
 
-    // TODO: проверка, что путь валидный
-
-    setHarvesterRoute(player.harvester, this.state.time, route);
+    setHarvesterRoute(player.harvester, this.state.time, data.fromAt, route, data.toAt);
   }
 
   public updatePlayerChanges(playerId: string, clientMsg: any): Cmd {
@@ -183,10 +183,9 @@ function polluteRoads(graph: ClientGraph, state: GameState) {
 
 function cleanRoads(_graph: ClientGraph, state: GameState) {
   state.players.forEach((player) => {
-    if (player.harvester.edge) {
-      player.score += player.harvester.edge.pollution;
-      player.harvester.edge.pollution = 0;
-    }
+    const { edge } = player.harvester.position;
+    player.score += edge.pollution;
+    edge.pollution = 0;
   });
 }
 

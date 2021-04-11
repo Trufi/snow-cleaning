@@ -12,9 +12,9 @@ function heuristic(dx: number, dy: number) {
 
 export function pathFindFromMidway(from: Position, to: Position) {
   let fromVertex: ClientGraphVertex;
-  if (from.segmentIndex === 0 && from.t === 0) {
+  if (from.at === 0) {
     fromVertex = from.edge.a;
-  } else if (from.segmentIndex === from.edge.geometry.length - 1 && from.t === 1) {
+  } else if (from.at === 1) {
     fromVertex = from.edge.b;
   } else {
     const { vertex, leftEdge, rightEdge } = createArtificialVertexAndEdges(from);
@@ -23,9 +23,9 @@ export function pathFindFromMidway(from: Position, to: Position) {
   }
 
   let toVertex: ClientGraphVertex;
-  if (to.segmentIndex === 0 && to.t === 0) {
+  if (to.at === 0) {
     toVertex = to.edge.a;
-  } else if (to.segmentIndex === to.edge.geometry.length - 2 && to.t === 1) {
+  } else if (to.at === 1) {
     toVertex = to.edge.b;
   } else {
     const { vertex, leftEdge, rightEdge } = createArtificialVertexAndEdges(to);
@@ -36,15 +36,18 @@ export function pathFindFromMidway(from: Position, to: Position) {
   }
 
   let path = pathFind(fromVertex, toVertex);
+  if (!path) {
+    return;
+  }
 
   if (fromVertex.type === 'artificial') {
-    path = path?.slice(1);
+    path[0] = anotherEdgeVertex(from.edge, path[1]);
   }
 
   if (toVertex.type === 'artificial') {
     toVertex.edges[0].a.pathFind.artificialEdge = undefined;
     toVertex.edges[1].b.pathFind.artificialEdge = undefined;
-    path = path?.slice(0, -1);
+    path[path.length - 1] = anotherEdgeVertex(to.edge, path[path.length - 2]);
   }
 
   return path;

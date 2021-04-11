@@ -1,14 +1,17 @@
 import { ClientGraphVertex } from '@game/data/clientGraph';
 import { ObjectElement } from '@game/utils';
+import { Position } from '../types';
 
 const joinGame = (token: string) => ({
   type: 'joinGame' as const,
   token,
 });
 
-const newRoute = (vertices: ClientGraphVertex[]) => ({
+const newRoute = (fromPosition: Position, vertices: ClientGraphVertex[], toPosition: Position) => ({
   type: 'newRoute' as const,
   vertexIndices: vertices.map((vertex) => vertex.index),
+  fromAt: fromPosition.at,
+  toAt: toPosition.at,
 });
 
 const ping = (time: number) => ({

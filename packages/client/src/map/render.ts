@@ -86,8 +86,8 @@ export class Render {
   public render() {
     for (let i = 0; i < this.points.length; i++) {
       const { point, harvester } = this.points[i];
-      point.position[0] = harvester.coords[0];
-      point.position[1] = harvester.coords[1];
+      point.position[0] = harvester.position.coords[0];
+      point.position[1] = harvester.position.coords[1];
       point.icon = 0;
     }
 
