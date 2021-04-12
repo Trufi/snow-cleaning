@@ -11,6 +11,11 @@ function heuristic(dx: number, dy: number) {
 }
 
 export function pathFindFromMidway(from: Position, to: Position) {
+  if (from.edge === to.edge) {
+    const { a, b } = from.edge;
+    return from.at < to.at ? [a, b] : [b, a];
+  }
+
   let fromVertex: ClientGraphVertex;
   if (from.at === 0) {
     fromVertex = from.edge.a;
