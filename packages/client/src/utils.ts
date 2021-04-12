@@ -67,7 +67,10 @@ export function getSegment(edge: ClientGraphEdge, at: number) {
     const segmentLength = vec2dist(geometry[i], geometry[i + 1]);
     if (passed + segmentLength >= distance) {
       const coords = [0, 0];
-      const positionAtSegment = clamp((distance - passed) / segmentLength, 0, 1);
+
+      // Иногда из данных может прийти сегмент нулевой длины
+      const positionAtSegment = segmentLength > 0 ? clamp((distance - passed) / segmentLength, 0, 1) : 0;
+
       vec2lerp(coords, geometry[i], geometry[i + 1], positionAtSegment);
       return {
         segmentIndex: i,
