@@ -2,16 +2,19 @@ import RBush from 'rbush';
 import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 import { PlayerData, ServerMsg } from '@game/server/messages';
 import { mapMap, getClosestPointOnLineSegment } from '@game/utils';
+import { projectGeoToMap, projectMapToGeo } from '@game/utils/geo';
 import { vec2dist } from '@game/utils/vec2';
 import { cmd, Cmd } from '../commands';
 import { drawMarker, drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
 import { renderUI } from '../renderUI';
-import { projectGeoToMap, projectMapToGeo } from '../utils';
 import { pathFindFromMidway } from './pathfind';
 import { Position } from '../types';
 import { getAtFromSegment, getSegment } from '../utils';
+import { MouseZoom } from '../map/handlers/mouseZoom';
+import { MousePitchRotate } from '../map/handlers/mousePitchRotate';
+import { TouchZoomRotate } from '../map/handlers/touchZoomRotate';
 
 export interface Harvester {
   playerId: string;
@@ -54,6 +57,9 @@ function createHarvester(graph: ClientGraph, serverHarvester: PlayerData['harves
 export class Game {
   private state: GameState;
   private graphVerticesTree: RBush<{ vertex: ClientGraphVertex }>;
+  private mouseZoom: MouseZoom;
+  private mousePitchRotate: MousePitchRotate;
+  private touchZoomRotate: TouchZoomRotate;
 
   constructor(private graph: ClientGraph, private render: Render, startData: ServerMsg['startData']) {
     const time = Date.now();
@@ -95,6 +101,11 @@ export class Game {
       drawMarker(this.render.map, toPosition.coords);
       // highlightEdge(this.render.map, toPosition.edge);
     });
+
+    const handlerContainer = document.getElementById('bbb') as HTMLElement;
+    this.mouseZoom = new MouseZoom(this.render.map, handlerContainer);
+    this.mousePitchRotate = new MousePitchRotate(this.render.map, handlerContainer);
+    this.touchZoomRotate = new TouchZoomRotate(this.render.map, handlerContainer);
 
     requestAnimationFrame(this.gameLoop);
   }
@@ -191,6 +202,10 @@ export class Game {
     const time = Date.now();
     this.state.prevTime = this.state.time;
     this.state.time = time;
+
+    this.mouseZoom.update();
+    this.mousePitchRotate.update();
+    this.touchZoomRotate.update();
 
     this.render.render();
   };

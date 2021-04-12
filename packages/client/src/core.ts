@@ -1,10 +1,11 @@
 import { AnyServerMsg, ServerMsg } from '@game/server/messages';
 import { ClientGraph } from '@game/data/clientGraph';
+import { projectGeoToMap } from '@game/utils/geo';
+import { throttle } from '@game/utils';
 import { Transport, TransportProps } from './transport';
 import { msg } from './messages';
 import { Game } from './game/game';
 import { Render } from './map/render';
-import { projectGeoToMap, throttle } from './utils';
 import { Cmd, ExistCmd } from './commands';
 
 export class InitialState {

@@ -23,6 +23,14 @@ export function clamp(value: number, min: number, max: number) {
   return value;
 }
 
+export function sign(x: number) {
+  x = +x; // convert to a number
+  if (x === 0 || Number.isNaN(x)) {
+    return x; // 0, -0 or NaN
+  }
+  return x > 0 ? 1 : -1;
+}
+
 export const lerp = (a: number, b: number, t: number) => a + t * (b - a);
 
 export const pick = <T extends { [key: string]: any }, K extends keyof T>(obj: T, targetProps: K[]): Pick<T, K> => {
@@ -84,4 +92,32 @@ export function getClosestPointOnLineSegment(point: number[], point1: number[], 
       t: param,
     };
   }
+}
+
+export function throttle(fn: (...args: any[]) => void, time: number) {
+  let lock: any;
+  let savedArgs: any;
+
+  function later() {
+    // reset lock and call if queued
+    lock = false;
+    if (savedArgs) {
+      wrapperFn(...savedArgs);
+      savedArgs = false;
+    }
+  }
+
+  function wrapperFn(...args: any[]) {
+    if (lock) {
+      // called too soon, queue to call later
+      savedArgs = args;
+    } else {
+      // call and lock until later
+      fn(...args);
+      setTimeout(later, time);
+      lock = true;
+    }
+  }
+
+  return wrapperFn;
 }

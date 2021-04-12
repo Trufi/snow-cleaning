@@ -1,7 +1,8 @@
 import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
+import { projectMapToGeo } from '@game/utils/geo';
 import { findEdgeFromVertexToVertex } from '@game/utils/graph';
 import { Position } from '../types';
-import { getCircleIcon, getSegment, projectMapToGeo } from '../utils';
+import { getCircleIcon, getSegment } from '../utils';
 
 interface DrawnRoute {
   path: mapgl.Polyline;
