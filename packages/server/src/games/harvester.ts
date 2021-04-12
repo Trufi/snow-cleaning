@@ -1,5 +1,7 @@
 import { ClientGraph, ClientGraphVertex } from '@game/data/clientGraph';
+import { clamp } from '@game/utils';
 import { findEdgeFromVertexToVertex } from '@game/utils/graph';
+import { GamePlayer } from '../types';
 import { random } from '../utils';
 import { Harvester } from './types';
 
@@ -62,7 +64,8 @@ export function setHarvesterRoute(
   harvester.edgeIndexInRoute = 0;
 }
 
-export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: number) {
+export function updateHarvester(_graph: ClientGraph, player: GamePlayer, now: number) {
+  const { harvester } = player;
   const { position } = harvester;
 
   const passedDistanceInEdge = harvester.speed * (now - harvester.edgeStartTime);
@@ -74,6 +77,11 @@ export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: 
   if (isFinalRouteEdge && position.at === harvester.route.toAt) {
     return;
   }
+
+  // Обновляем загрязнение дороги и начисляем очки
+  const nextPollution = clamp(position.edge.pollution - position.edge.pollution * dx, 0, 1);
+  player.score += ((position.edge.pollution - nextPollution) * position.edge.length) / 1000;
+  position.edge.pollution = nextPollution;
 
   let endAt: number;
   if (isFinalRouteEdge) {

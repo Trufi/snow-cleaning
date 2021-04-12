@@ -162,7 +162,7 @@ function needToRestart(state: GameState) {
 
 function updateHarvesters(graph: ClientGraph, state: GameState) {
   state.players.forEach((player) => {
-    updateHarvester(graph, player.harvester, state.time);
+    updateHarvester(graph, player, state.time);
   });
 }
 
@@ -181,12 +181,12 @@ function polluteRoads(graph: ClientGraph, state: GameState) {
   });
 }
 
-function cleanRoads(_graph: ClientGraph, state: GameState) {
-  state.players.forEach((player) => {
-    const { edge } = player.harvester.position;
-    player.score += edge.pollution;
-    edge.pollution = 0;
-  });
+function cleanRoads(_graph: ClientGraph, _state: GameState) {
+  // state.players.forEach((player) => {
+  //   const { edge } = player.harvester.position;
+  //   player.score += edge.pollution;
+  //   edge.pollution = 0;
+  // });
 }
 
 const getTickBodyRecipientIds = (gameState: GameState) => {

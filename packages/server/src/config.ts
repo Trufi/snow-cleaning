@@ -19,5 +19,5 @@ export const config = {
   discardMessageThreshold: 1000,
 
   polluteInterval: 100,
-  clientPollutionUpdateInterval: 500,
+  clientPollutionUpdateInterval: 300,
 };

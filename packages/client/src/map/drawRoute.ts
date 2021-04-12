@@ -55,7 +55,7 @@ export function drawRoute(map: mapgl.Map, fromPosition: Position, path: ClientGr
     path: new mapgl.Polyline(map, {
       coordinates: coordinates.map((c) => projectMapToGeo(c)),
       width: 8,
-      color: '#3388ff',
+      color: '#3388ff55',
     }),
   };
 }
@@ -85,7 +85,7 @@ export function drawMarker(map: mapgl.Map, mapPoint: number[]) {
   if (!marker) {
     marker = new mapgl.Marker(map, {
       coordinates: projectMapToGeo(mapPoint),
-      icon: getCircleIcon('#3388ff', 6),
+      icon: getCircleIcon('#3388ff55', 6),
     });
   } else {
     marker.setCoordinates(projectMapToGeo(mapPoint));
