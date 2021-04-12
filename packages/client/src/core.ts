@@ -4,7 +4,7 @@ import { Transport, TransportProps } from './transport';
 import { msg } from './messages';
 import { Game } from './game/game';
 import { Render } from './map/render';
-import { projectGeoToMap } from './utils';
+import { projectGeoToMap, throttle } from './utils';
 import { Cmd, ExistCmd } from './commands';
 
 export class InitialState {
@@ -53,11 +53,23 @@ class InGameState {
     messageHandlers.onMessage = this.onServerMessage;
     this.game = new Game(this.graph, render, startData);
 
-    document.getElementById('map')?.addEventListener('click', (ev) => {
-      const lngLat = this.render.map.unproject([ev.clientX, ev.clientY]);
-      const point = projectGeoToMap(lngLat);
-      this.executeCmd(this.game.goToPoint(point));
-    });
+    document.getElementById('bbb')?.addEventListener(
+      'mousemove',
+      throttle((ev) => {
+        const lngLat = this.render.map.unproject([ev.clientX, ev.clientY]);
+        const point = projectGeoToMap(lngLat);
+        this.executeCmd(this.game.goToPoint(point));
+      }, 100),
+    );
+    document.getElementById('bbb')?.addEventListener(
+      'touchmove',
+      throttle((ev: TouchEvent) => {
+        const touch = ev.touches[0];
+        const lngLat = this.render.map.unproject([touch.clientX, touch.clientY]);
+        const point = projectGeoToMap(lngLat);
+        this.executeCmd(this.game.goToPoint(point));
+      }, 100),
+    );
   }
 
   private onServerMessage = (serverMsg: AnyServerMsg) => {

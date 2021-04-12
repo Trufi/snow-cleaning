@@ -8,7 +8,7 @@ import { drawMarker, drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
 import { renderUI } from '../renderUI';
-// import { projectMapToGeo } from '../utils';
+import { projectGeoToMap, projectMapToGeo } from '../utils';
 import { pathFindFromMidway } from './pathfind';
 import { Position } from '../types';
 import { getAtFromSegment, getSegment } from '../utils';
@@ -85,6 +85,17 @@ export class Game {
 
     this.render.setLines(this.graph.edges, this.graph.min, this.graph.max);
 
+    document.getElementById('map')?.addEventListener('mousemove', (ev) => {
+      const lngLat = this.render.map.unproject([ev.clientX, ev.clientY]);
+      const point = projectGeoToMap(lngLat);
+      const toPosition = findNearestGraphVertex(this.graph, this.graphVerticesTree, point);
+      if (!toPosition) {
+        return;
+      }
+      drawMarker(this.render.map, toPosition.coords);
+      // highlightEdge(this.render.map, toPosition.edge);
+    });
+
     requestAnimationFrame(this.gameLoop);
   }
 
@@ -144,7 +155,7 @@ export class Game {
       gamePlayer.score = serverPlayer.score;
     });
 
-    // this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
+    this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.position.coords));
     renderUI(this.state);
   }
 
@@ -162,8 +173,6 @@ export class Game {
     if (!toPosition) {
       return;
     }
-
-    drawMarker(this.render.map, toPosition.coords);
 
     const harvester = this.state.currentPlayer.harvester;
     const path = pathFindFromMidway(harvester.position, toPosition);

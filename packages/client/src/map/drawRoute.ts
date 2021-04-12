@@ -1,7 +1,7 @@
 import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 import { findEdgeFromVertexToVertex } from '@game/utils/graph';
 import { Position } from '../types';
-import { getSegment, projectMapToGeo } from '../utils';
+import { getCircleIcon, getSegment, projectMapToGeo } from '../utils';
 
 interface DrawnRoute {
   path: mapgl.Polyline;
@@ -53,8 +53,8 @@ export function drawRoute(map: mapgl.Map, fromPosition: Position, path: ClientGr
   drawnRoute = {
     path: new mapgl.Polyline(map, {
       coordinates: coordinates.map((c) => projectMapToGeo(c)),
-      width: 10,
-      color: '#3388ff77',
+      width: 8,
+      color: '#3388ff',
     }),
   };
 }
@@ -81,8 +81,27 @@ function getPartGeometry(edge: ClientGraphEdge, fromAt: number, toAt: number) {
 
 let marker: mapgl.Marker | undefined;
 export function drawMarker(map: mapgl.Map, mapPoint: number[]) {
-  marker?.destroy();
-  marker = new mapgl.Marker(map, {
-    coordinates: projectMapToGeo(mapPoint),
+  if (!marker) {
+    marker = new mapgl.Marker(map, {
+      coordinates: projectMapToGeo(mapPoint),
+      icon: getCircleIcon('#3388ff', 6),
+    });
+  } else {
+    marker.setCoordinates(projectMapToGeo(mapPoint));
+  }
+  // marker?.destroy();
+  // marker = new mapgl.Marker(map, {
+  //   coordinates: projectMapToGeo(mapPoint),
+  // });
+}
+
+let edgePolyline: mapgl.Polyline | undefined;
+export function highlightEdge(map: mapgl.Map, edge: ClientGraphEdge) {
+  edgePolyline?.destroy();
+  edgePolyline = new mapgl.Polyline(map, {
+    coordinates: edge.geometry.map((p) => projectMapToGeo(p)),
+    width: 6,
+    color: '#00ff00',
+    zIndex: 5,
   });
 }

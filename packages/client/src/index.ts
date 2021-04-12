@@ -5,6 +5,7 @@ import { Snow } from 'mapgl-snow';
 import { InitialState } from './core';
 import { Render } from './map/render';
 import { SimulationIcons } from './types';
+import { getCircleIcon } from './utils';
 
 const map = ((window as any).map = new mapgl.Map('map', {
   center: [82.9412, 55.0104],
@@ -23,16 +24,6 @@ const iconSize: Array<[number, number]> = [
   [16, 20],
 ];
 
-function getCircleIcon(color: string, radius: number, color2 = '#000', radius2 = 0): string {
-  const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="${radius * 2}" height="${radius * 2}" viewBox="0 0 ${
-    radius * 2
-  } ${radius * 2}">
-      <circle fill="${color}" cx="${radius}" cy="${radius}" r="${radius}"/>
-      <circle fill="${color2}" cx="${radius}" cy="${radius}" r="${radius2}"/>
-  </svg>`;
-  return `data:image/svg+xml;base64,${btoa(icon)}`;
-}
-
 const icons: SimulationIcons = {
   virgin: {
     width: iconSize,
@@ -45,7 +36,7 @@ const render = new Render(map, icons);
 
 new Snow(map as any);
 
-const serverURL = 'localhost:3001';
+const serverURL = '192.168.3.17:3001';
 
 fetch(`http://${serverURL}/assets/novosibirsk.json`)
   .then((res) => res.json())
