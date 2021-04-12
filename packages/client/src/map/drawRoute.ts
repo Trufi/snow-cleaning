@@ -1,5 +1,7 @@
-import { ClientGraphVertex } from '@game/data/clientGraph';
-import { projectMapToGeo } from '../utils';
+import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
+import { findEdgeFromVertexToVertex } from '@game/utils/graph';
+import { Position } from '../types';
+import { getSegment, projectMapToGeo } from '../utils';
 
 interface DrawnRoute {
   path: mapgl.Polyline;
@@ -7,35 +9,45 @@ interface DrawnRoute {
 
 let drawnRoute: DrawnRoute | undefined;
 
-export function drawRoute(map: mapgl.Map, path: ClientGraphVertex[]) {
+export function drawRoute(map: mapgl.Map, fromPosition: Position, path: ClientGraphVertex[], toPosition: Position) {
   if (drawnRoute) {
     drawnRoute.path.destroy();
   }
 
   const coordinates: number[][] = [];
-  for (let i = 0; i < path.length - 1; i++) {
-    const a = path[i];
-    const b = path[i + 1];
 
-    const edgeVector = i === path.length - 2 ? b : a;
+  const firstEdge = findEdgeFromVertexToVertex(path[0], path[1]);
+  const lastEdge = findEdgeFromVertexToVertex(path[path.length - 2], path[path.length - 1]);
+  if (!firstEdge || !lastEdge) {
+    throw new Error(`Не найдена кривая при отрисовки поиска пути`);
+  }
 
-    const edge = edgeVector.edges.find((edge) => (edge.a === a && edge.b === b) || (edge.b === a && edge.a === b));
-    if (!edge) {
-      throw new Error(`Не найдена кривая при отрисовки поиска пути`);
-    }
-    if (edge.a === a) {
-      for (let j = 0; j < edge.geometry.length - 1; j++) {
-        coordinates.push(edge.geometry[j]);
+  if (firstEdge.edge === lastEdge.edge) {
+    coordinates.push(...getPartGeometry(firstEdge.edge, fromPosition.at, toPosition.at));
+  } else {
+    coordinates.push(...getPartGeometry(firstEdge.edge, fromPosition.at, firstEdge.forward ? 1 : 0));
+
+    for (let i = 1; i < path.length - 2; i++) {
+      const a = path[i];
+      const b = path[i + 1];
+
+      const maybeEdge = findEdgeFromVertexToVertex(a, b);
+      if (!maybeEdge) {
+        throw new Error(`Не найдена кривая при отрисовки поиска пути`);
       }
-    } else {
-      for (let j = edge.geometry.length - 1; j > 0; j--) {
-        coordinates.push(edge.geometry[j]);
+
+      if (maybeEdge.forward) {
+        for (let j = 0; j < maybeEdge.edge.geometry.length - 1; j++) {
+          coordinates.push(maybeEdge.edge.geometry[j]);
+        }
+      } else {
+        for (let j = maybeEdge.edge.geometry.length - 1; j > 0; j--) {
+          coordinates.push(maybeEdge.edge.geometry[j]);
+        }
       }
     }
 
-    if (i === path.length - 2) {
-      coordinates.push(b.coords);
-    }
+    coordinates.push(...getPartGeometry(lastEdge.edge, lastEdge.forward ? 0 : 1, toPosition.at));
   }
 
   drawnRoute = {
@@ -45,6 +57,26 @@ export function drawRoute(map: mapgl.Map, path: ClientGraphVertex[]) {
       color: '#3388ff77',
     }),
   };
+}
+
+function getPartGeometry(edge: ClientGraphEdge, fromAt: number, toAt: number) {
+  const coordinates: number[][] = [];
+  const segmentFrom = getSegment(edge, fromAt);
+  const segmentTo = getSegment(edge, toAt);
+
+  coordinates.push(segmentFrom.coords);
+  if (fromAt < toAt) {
+    for (let i = segmentFrom.segmentIndex + 1; i <= segmentTo.segmentIndex; i++) {
+      coordinates.push(edge.geometry[i]);
+    }
+  } else {
+    for (let i = segmentFrom.segmentIndex; i > segmentTo.segmentIndex; i--) {
+      coordinates.push(edge.geometry[i]);
+    }
+  }
+  coordinates.push(segmentTo.coords);
+
+  return coordinates;
 }
 
 let marker: mapgl.Marker | undefined;

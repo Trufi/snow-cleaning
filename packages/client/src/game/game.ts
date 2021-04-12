@@ -171,7 +171,7 @@ export class Game {
       return;
     }
 
-    drawRoute(this.render.map, path);
+    drawRoute(this.render.map, harvester.position, path, toPosition);
 
     return cmd.sendMsg(msg.newRoute(harvester.position, path, toPosition));
   }

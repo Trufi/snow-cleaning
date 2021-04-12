@@ -1,9 +1,10 @@
 import { ClientGraph, ClientGraphVertex } from '@game/data/clientGraph';
-// import { random } from '../utils';
+import { findEdgeFromVertexToVertex } from '@game/utils/graph';
+import { random } from '../utils';
 import { Harvester } from './types';
 
 export function createHarvester(playerId: string, graph: ClientGraph) {
-  const vertexFrom = graph.vertices[2487]; // Math.floor(random() * graph.vertices.length)];
+  const vertexFrom = graph.vertices[Math.floor(random() * graph.vertices.length)];
 
   const edge = vertexFrom.edges[0];
   const forward = edge.a === vertexFrom;
@@ -47,7 +48,7 @@ export function setHarvesterRoute(
   };
 
   harvester.position.at = fromAt;
-  const maybeEdge = findEdge(vertices[0], vertices[1]);
+  const maybeEdge = findEdgeFromVertexToVertex(vertices[0], vertices[1]);
   if (!maybeEdge) {
     console.log(`Не найдена кривая пути у игрока ${harvester.playerId}`);
     return;
@@ -59,24 +60,6 @@ export function setHarvesterRoute(
 
   harvester.forward = maybeEdge.forward;
   harvester.edgeIndexInRoute = 0;
-}
-
-function findEdge(fromVertex: ClientGraphVertex, toVertex: ClientGraphVertex) {
-  for (const edge of fromVertex.edges) {
-    if (edge.a === fromVertex && edge.b === toVertex) {
-      return {
-        edge,
-        forward: true,
-      };
-    }
-
-    if (edge.a === toVertex && edge.b === fromVertex) {
-      return {
-        edge,
-        forward: false,
-      };
-    }
-  }
 }
 
 export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: number) {
@@ -113,7 +96,7 @@ export function updateHarvester(_graph: ClientGraph, harvester: Harvester, now: 
       position.at = harvester.route.toAt;
     } else {
       harvester.edgeIndexInRoute++;
-      const maybeEdge = findEdge(
+      const maybeEdge = findEdgeFromVertexToVertex(
         harvester.route.vertices[harvester.edgeIndexInRoute],
         harvester.route.vertices[harvester.edgeIndexInRoute + 1],
       );
