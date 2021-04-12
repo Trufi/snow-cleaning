@@ -34,6 +34,10 @@ export interface GamePlayer {
 export interface GameState {
   prevTime: number;
   time: number;
+
+  lastGoToPointUpdateTime: number;
+  lastGoToPoint: number[] | undefined;
+
   players: Map<string, GamePlayer>;
   currentPlayer: GamePlayer;
 }
@@ -82,6 +86,9 @@ export class Game {
       time,
       players,
       currentPlayer: players.get(startData.playerId) as GamePlayer, // TODO: обработать бы
+
+      lastGoToPoint: undefined,
+      lastGoToPointUpdateTime: time,
     };
 
     this.graphVerticesTree = new RBush();
@@ -91,23 +98,25 @@ export class Game {
 
     this.render.setLines(this.graph.edges, this.graph.min, this.graph.max);
 
-    document.getElementById('map')?.addEventListener('mousemove', (ev) => {
-      const lngLat = this.render.map.unproject([ev.clientX, ev.clientY]);
-      const point = projectGeoToMap(lngLat);
-      const toPosition = findNearestGraphVertex(this.graph, this.graphVerticesTree, point);
-      if (!toPosition) {
-        return;
-      }
-      drawMarker(this.render.map, toPosition.coords);
-      // highlightEdge(this.render.map, toPosition.edge);
-    });
-
     const handlerContainer = document.getElementById('bbb') as HTMLElement;
     this.mouseZoom = new MouseZoom(this.render.map, handlerContainer);
     this.mousePitchRotate = new MousePitchRotate(this.render.map, handlerContainer);
     this.touchZoomRotate = new TouchZoomRotate(this.render.map, handlerContainer);
 
-    requestAnimationFrame(this.gameLoop);
+    handlerContainer.addEventListener('mousemove', (ev) => {
+      this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([ev.clientX, ev.clientY]));
+      const toPosition = findNearestGraphVertex(this.graph, this.graphVerticesTree, this.state.lastGoToPoint);
+      if (toPosition) {
+        drawMarker(this.render.map, toPosition.coords);
+      }
+    });
+    handlerContainer.addEventListener('touchmove', (ev: TouchEvent) => {
+      if (ev.touches.length > 1) {
+        return;
+      }
+      const touch = ev.touches[0];
+      this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([touch.clientX, touch.clientY]));
+    });
   }
 
   public addPlayer(data: ServerMsg['playerEnter']) {
@@ -179,8 +188,27 @@ export class Game {
     this.render.updateLines(this.graph.edges);
   }
 
-  public goToPoint(mapPoint: number[]): Cmd {
-    const toPosition = findNearestGraphVertex(this.graph, this.graphVerticesTree, mapPoint);
+  public update(): Cmd {
+    const time = Date.now();
+    this.state.prevTime = this.state.time;
+    this.state.time = time;
+
+    this.mouseZoom.update();
+    this.mousePitchRotate.update();
+    this.touchZoomRotate.update();
+
+    this.render.render();
+
+    if (time - this.state.lastGoToPointUpdateTime > 100) {
+      return this.goToPoint();
+    }
+  }
+
+  private goToPoint(): Cmd {
+    if (!this.state.lastGoToPoint) {
+      return;
+    }
+    const toPosition = findNearestGraphVertex(this.graph, this.graphVerticesTree, this.state.lastGoToPoint);
     if (!toPosition) {
       return;
     }
@@ -195,20 +223,6 @@ export class Game {
 
     return cmd.sendMsg(msg.newRoute(harvester.position, path, toPosition));
   }
-
-  private gameLoop = () => {
-    requestAnimationFrame(this.gameLoop);
-
-    const time = Date.now();
-    this.state.prevTime = this.state.time;
-    this.state.time = time;
-
-    this.mouseZoom.update();
-    this.mousePitchRotate.update();
-    this.touchZoomRotate.update();
-
-    this.render.render();
-  };
 
   private updatePointsSize() {
     this.render.setPoints(

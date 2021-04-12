@@ -1,7 +1,5 @@
 import { AnyServerMsg, ServerMsg } from '@game/server/messages';
 import { ClientGraph } from '@game/data/clientGraph';
-import { projectGeoToMap } from '@game/utils/geo';
-import { throttle } from '@game/utils';
 import { Transport, TransportProps } from './transport';
 import { msg } from './messages';
 import { Game } from './game/game';
@@ -48,30 +46,19 @@ class InGameState {
     messageHandlers: TransportProps,
     private transport: Transport,
     private graph: ClientGraph,
-    private render: Render,
+    render: Render,
     startData: ServerMsg['startData'],
   ) {
     messageHandlers.onMessage = this.onServerMessage;
     this.game = new Game(this.graph, render, startData);
 
-    document.getElementById('bbb')?.addEventListener(
-      'mousemove',
-      throttle((ev) => {
-        const lngLat = this.render.map.unproject([ev.clientX, ev.clientY]);
-        const point = projectGeoToMap(lngLat);
-        this.executeCmd(this.game.goToPoint(point));
-      }, 100),
-    );
-    document.getElementById('bbb')?.addEventListener(
-      'touchmove',
-      throttle((ev: TouchEvent) => {
-        const touch = ev.touches[0];
-        const lngLat = this.render.map.unproject([touch.clientX, touch.clientY]);
-        const point = projectGeoToMap(lngLat);
-        this.executeCmd(this.game.goToPoint(point));
-      }, 100),
-    );
+    requestAnimationFrame(this.loop);
   }
+
+  private loop = () => {
+    requestAnimationFrame(this.loop);
+    this.executeCmd(this.game.update());
+  };
 
   private onServerMessage = (serverMsg: AnyServerMsg) => {
     if (serverMsg.type !== 'tickData') {
