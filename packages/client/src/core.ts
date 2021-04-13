@@ -85,6 +85,10 @@ class InGameState {
         this.game.removePlayer(serverMsg);
         break;
       }
+
+      case 'pong': {
+        this.game.updatePingAndServerTime(serverMsg);
+      }
     }
   };
 

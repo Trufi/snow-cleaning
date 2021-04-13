@@ -8,6 +8,6 @@ import { createRandomFunction } from '@game/utils';
  * иначе время выйдет за диапазон int32
  */
 const startTime = Date.now();
-export const time = () => Date.now() - startTime;
+export const time = () => (Date.now() - startTime) % 2147483647;
 
 export const random = createRandomFunction(2314125);

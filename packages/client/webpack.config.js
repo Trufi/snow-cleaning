@@ -30,7 +30,7 @@ module.exports = (env) => {
     resolve: {
       extensions: ['.ts', '.js', '.tsx'],
       alias: {
-        '@game/gameServer': path.resolve(__dirname, '../gameServer/src'),
+        '@game/server': path.resolve(__dirname, '../server/src'),
         '@game/utils': path.resolve(__dirname, '../utils/src'),
         '@game/data': path.resolve(__dirname, '../data'),
       },

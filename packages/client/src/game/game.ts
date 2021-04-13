@@ -4,17 +4,18 @@ import { PlayerData, ServerMsg } from '@game/server/messages';
 import { mapMap, getClosestPointOnLineSegment } from '@game/utils';
 import { projectGeoToMap, projectMapToGeo } from '@game/utils/geo';
 import { vec2dist } from '@game/utils/vec2';
-import { cmd, Cmd } from '../commands';
+import { cmd, Cmd, union } from '../commands';
 import { drawMarker, drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
 import { renderUI } from '../renderUI';
 import { pathFindFromMidway } from './pathfind';
 import { Position } from '../types';
-import { getAtFromSegment, getSegment } from '../utils';
+import { getAtFromSegment, getSegment, getTime } from '../utils';
 import { MouseZoom } from '../map/handlers/mouseZoom';
 import { MousePitchRotate } from '../map/handlers/mousePitchRotate';
 import { TouchZoomRotate } from '../map/handlers/touchZoomRotate';
+import { ServerTime } from './serverTime';
 
 export interface Harvester {
   playerId: string;
@@ -64,9 +65,10 @@ export class Game {
   private mouseZoom: MouseZoom;
   private mousePitchRotate: MousePitchRotate;
   private touchZoomRotate: TouchZoomRotate;
+  private serverTime: ServerTime;
 
   constructor(private graph: ClientGraph, private render: Render, startData: ServerMsg['startData']) {
-    const time = Date.now();
+    const time = getTime();
 
     const players: GameState['players'] = new Map();
     startData.players.forEach((player) => {
@@ -117,6 +119,8 @@ export class Game {
       const touch = ev.touches[0];
       this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([touch.clientX, touch.clientY]));
     });
+
+    this.serverTime = new ServerTime(time);
   }
 
   public addPlayer(data: ServerMsg['playerEnter']) {
@@ -176,7 +180,7 @@ export class Game {
     });
 
     this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.position.coords));
-    renderUI(this.state);
+    renderUI(this.state, this.serverTime);
   }
 
   public updatePollutionFromServer(data: ServerMsg['pollutionData']) {
@@ -189,9 +193,13 @@ export class Game {
   }
 
   public update(): Cmd {
-    const time = Date.now();
+    const time = getTime();
     this.state.prevTime = this.state.time;
     this.state.time = time;
+
+    const cmds: Cmd[] = [];
+
+    cmds.push(this.serverTime.update(time));
 
     this.mouseZoom.update();
     this.mousePitchRotate.update();
@@ -200,8 +208,14 @@ export class Game {
     this.render.render();
 
     if (time - this.state.lastGoToPointUpdateTime > 100) {
-      return this.goToPoint();
+      cmds.push(this.goToPoint());
     }
+
+    return union(cmds);
+  }
+
+  public updatePingAndServerTime(serverMsg: ServerMsg['pong']) {
+    this.serverTime.updatePingAndServerTime(this.state.time, serverMsg);
   }
 
   private goToPoint(): Cmd {

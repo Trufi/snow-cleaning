@@ -15,7 +15,7 @@ const newRoute = (fromPosition: Position, vertices: ClientGraphVertex[], toPosit
 });
 
 const ping = (time: number) => ({
-  type: 'ping' as 'ping',
+  type: 'ping' as const,
   time,
 });
 

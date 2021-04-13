@@ -76,3 +76,12 @@ export function getMousePosition(container: HTMLElement, clientX: number, client
   const rect = container.getBoundingClientRect();
   return [clientX - rect.left - container.clientLeft, clientY - rect.top - container.clientTop];
 }
+
+/**
+ * Т.к. на сервер время считается от старта,
+ * то на клиенте делаем что-то похожее, чтобы сильно большой разница не была
+ */
+const startTime = Date.now();
+export function getTime() {
+  return Date.now() - startTime;
+}

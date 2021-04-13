@@ -83,7 +83,7 @@ const pollutionData = (graph: ClientGraph) => {
 };
 
 const pong = (serverTime: number, clientTime: number) => ({
-  type: 'pong' as 'pong',
+  type: 'pong' as const,
   serverTime,
   clientTime,
 });
