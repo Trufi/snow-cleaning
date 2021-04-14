@@ -45,7 +45,6 @@ export class Game {
 
     updateHarvesters(this.graph, this.state);
     polluteRoads(this.graph, this.state);
-    cleanRoads(this.graph, this.state);
 
     // cmds.push(cmd.sendPbfMsgTo(getTickBodyRecipientIds(this.state), pbfMsg.tickData(this.state)));
     cmds.push(cmd.sendMsgTo(getTickBodyRecipientIds(this.state), msg.tickData(this.state)));
@@ -179,14 +178,6 @@ function polluteRoads(graph: ClientGraph, state: GameState) {
   graph.edges.forEach((edge) => {
     edge.pollution = clamp(edge.pollution + (dt * pollutionFactor) / 1000, 0, 1);
   });
-}
-
-function cleanRoads(_graph: ClientGraph, _state: GameState) {
-  // state.players.forEach((player) => {
-  //   const { edge } = player.harvester.position;
-  //   player.score += edge.pollution;
-  //   edge.pollution = 0;
-  // });
 }
 
 const getTickBodyRecipientIds = (gameState: GameState) => {

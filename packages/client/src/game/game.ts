@@ -1,7 +1,7 @@
 import RBush from 'rbush';
 import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
-import { PlayerData, ServerMsg } from '@game/server/messages';
-import { mapMap, getClosestPointOnLineSegment } from '@game/utils';
+import { ServerMsg } from '@game/server/messages';
+import { getClosestPointOnLineSegment, mapMap } from '@game/utils';
 import { projectGeoToMap, projectMapToGeo } from '@game/utils/geo';
 import { vec2dist } from '@game/utils/vec2';
 import { cmd, Cmd, union } from '../commands';
@@ -16,20 +16,21 @@ import { MouseZoom } from '../map/handlers/mouseZoom';
 import { MousePitchRotate } from '../map/handlers/mousePitchRotate';
 import { TouchZoomRotate } from '../map/handlers/touchZoomRotate';
 import { ServerTime } from './serverTime';
-
-export interface Harvester {
-  playerId: string;
-  forward: boolean;
-  speed: number;
-
-  position: Position;
-}
+import { createHarvester, Harvester, updateHarvester } from './harvester';
+import { createPlayerHarvester, PlayerHarvester, updatePlayerHarvester } from './playerHarvester';
 
 export interface GamePlayer {
   id: string;
   name: string;
   score: number;
-  harvester: Harvester;
+  harvester: Harvester | PlayerHarvester;
+}
+
+export interface CurrentGamePlayer {
+  id: string;
+  name: string;
+  score: number;
+  harvester: PlayerHarvester;
 }
 
 export interface GameState {
@@ -40,23 +41,7 @@ export interface GameState {
   lastGoToPoint: number[] | undefined;
 
   players: Map<string, GamePlayer>;
-  currentPlayer: GamePlayer;
-}
-
-function createHarvester(graph: ClientGraph, serverHarvester: PlayerData['harvester']) {
-  const edge = graph.edges[serverHarvester.position.edgeIndex];
-  const { segmentIndex, coords, positionAtSegment } = getSegment(edge, serverHarvester.position.at);
-  const harvester: Harvester = {
-    ...serverHarvester,
-    position: {
-      ...serverHarvester.position,
-      edge,
-      segmentIndex,
-      positionAtSegment,
-      coords,
-    },
-  };
-  return harvester;
+  currentPlayer: CurrentGamePlayer;
 }
 
 export class Game {
@@ -72,22 +57,30 @@ export class Game {
 
     const players: GameState['players'] = new Map();
     startData.players.forEach((player) => {
-      const harvester = createHarvester(this.graph, player.harvester);
-      const gamePlayer: GamePlayer = {
-        id: player.id,
-        name: player.name,
-        score: player.score,
-        harvester,
-      };
-
-      players.set(player.id, gamePlayer);
+      if (player.id !== startData.playerId) {
+        const gamePlayer: GamePlayer = {
+          id: player.id,
+          name: player.name,
+          score: player.score,
+          harvester: createHarvester(this.graph, player.harvester),
+        };
+        players.set(player.id, gamePlayer);
+      } else {
+        const gamePlayer: CurrentGamePlayer = {
+          id: player.id,
+          name: player.name,
+          score: player.score,
+          harvester: createPlayerHarvester(this.graph, player.harvester),
+        };
+        players.set(player.id, gamePlayer);
+      }
     });
 
     this.state = {
       prevTime: time,
       time,
       players,
-      currentPlayer: players.get(startData.playerId) as GamePlayer, // TODO: обработать бы
+      currentPlayer: players.get(startData.playerId) as CurrentGamePlayer, // TODO: обработать бы
 
       lastGoToPoint: undefined,
       lastGoToPointUpdateTime: time,
@@ -162,24 +155,31 @@ export class Game {
       if (!gamePlayer) {
         return;
       }
+      const {
+        score,
+        harvester: { edgeIndex, at },
+      } = serverPlayer;
 
-      const edge = this.graph.edges[serverPlayer.harvester.position.edgeIndex];
-      const segment = getSegment(edge, serverPlayer.harvester.position.at);
+      gamePlayer.score = score;
 
-      // Assign, а не спред, т.к. нельзя ссылку менять (хранится в рендере)
-      Object.assign(gamePlayer.harvester, serverPlayer.harvester, {
-        position: {
-          ...gamePlayer.harvester.position,
-          ...serverPlayer.harvester.position,
+      const edge = this.graph.edges[edgeIndex];
+      const { coords } = getSegment(edge, at);
+      if (gamePlayer.harvester.type === 'player') {
+        gamePlayer.harvester.steps.push({
+          time: data.time,
+          coords,
           edge,
-          coords: segment.coords,
-        },
-      });
-
-      gamePlayer.score = serverPlayer.score;
+          at,
+        });
+      } else {
+        gamePlayer.harvester.steps.push({
+          time: data.time,
+          coords,
+        });
+      }
     });
 
-    this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.position.coords));
+    this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
     renderUI(this.state, this.serverTime);
   }
 
@@ -200,6 +200,14 @@ export class Game {
     const cmds: Cmd[] = [];
 
     cmds.push(this.serverTime.update(time));
+
+    this.state.players.forEach((player) => {
+      if (player.harvester.type === 'player') {
+        updatePlayerHarvester(time, this.serverTime, player.harvester);
+      } else {
+        updateHarvester(time, this.serverTime, player.harvester);
+      }
+    });
 
     this.mouseZoom.update();
     this.mousePitchRotate.update();
@@ -235,7 +243,7 @@ export class Game {
 
     drawRoute(this.render.map, harvester.position, path, toPosition);
 
-    return cmd.sendMsg(msg.newRoute(harvester.position, path, toPosition));
+    return cmd.sendMsg(msg.newRoute(harvester.position.at, path, toPosition.at));
   }
 
   private updatePointsSize() {

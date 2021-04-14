@@ -13,11 +13,9 @@ const gameJoinFail = () => ({
 });
 
 const getHarvesterData = (harvester: Harvester) => ({
-  ...pick(harvester, ['playerId', 'edgeStartTime', 'forward', 'passed', 'speed']),
-  position: {
-    ...pick(harvester.position, ['at']),
-    edgeIndex: harvester.position.edge.index,
-  },
+  ...pick(harvester, ['playerId', 'speed']),
+  at: harvester.position.at,
+  edgeIndex: harvester.position.edge.index,
 });
 
 const getPlayerData = (player: GamePlayer) => ({
@@ -60,6 +58,7 @@ const playerLeave = (playerId: string) => ({
 const tickData = (game: GameState) => {
   return {
     type: 'tickData' as const,
+    time: game.time,
     players: mapMap(game.players, (player) => ({
       ...pick(player, ['id', 'score']),
       harvester: getHarvesterData(player.harvester),

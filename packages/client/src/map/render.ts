@@ -1,12 +1,12 @@
-import { Map } from '@2gis/mapgl/types';
+import { ClientGraphEdge } from '@game/data/clientGraph';
 import { RenderContext, SimulationIcons } from '../types';
 import { PointBatch, PointBatchEntity } from './pointBatch';
 import { LineBatch } from './lineBatch';
-import { Harvester } from '../game/game';
-import { ClientGraphEdge } from '@game/data/clientGraph';
+import { Harvester } from '../game/harvester';
+import { PlayerHarvester } from '../game/playerHarvester';
 
 interface RenderPoint {
-  harvester: Harvester;
+  harvester: Harvester | PlayerHarvester;
   point: PointBatchEntity;
 }
 
@@ -17,7 +17,7 @@ export class Render {
   private points: RenderPoint[];
   private lineBatch: LineBatch;
 
-  constructor(public map: Map, icons: SimulationIcons) {
+  constructor(public map: mapgl.Map, icons: SimulationIcons) {
     this.canvas = document.createElement('canvas');
     this.canvas.style.position = 'absolute';
     this.canvas.style.left = '0';
@@ -59,7 +59,7 @@ export class Render {
     this.lineBatch = new LineBatch(this.renderContext);
   }
 
-  public setPoints(harversters: Harvester[], min: number[], max: number[]) {
+  public setPoints(harversters: Array<Harvester | PlayerHarvester>, min: number[], max: number[]) {
     this.points = harversters.map((harvester) => ({
       harvester,
       point: {
@@ -86,8 +86,8 @@ export class Render {
   public render() {
     for (let i = 0; i < this.points.length; i++) {
       const { point, harvester } = this.points[i];
-      point.position[0] = harvester.position.coords[0];
-      point.position[1] = harvester.position.coords[1];
+      point.position[0] = harvester.coords[0];
+      point.position[1] = harvester.coords[1];
       point.icon = 0;
     }
 

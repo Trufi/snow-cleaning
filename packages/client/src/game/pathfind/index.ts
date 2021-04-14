@@ -1,6 +1,7 @@
 import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 import { FlatQueue } from './flatqueue';
-import { Position } from '../../types';
+import { PlayerHarvesterPosition } from '../playerHarvester';
+import { getSegment } from '../../utils';
 
 const list = new FlatQueue<ClientGraphVertex>();
 
@@ -10,7 +11,7 @@ function heuristic(dx: number, dy: number) {
   return dx + dy;
 }
 
-export function pathFindFromMidway(from: Position, to: Position) {
+export function pathFindFromMidway(from: PlayerHarvesterPosition, to: PlayerHarvesterPosition) {
   if (from.edge === to.edge) {
     const { a, b } = from.edge;
     return from.at < to.at ? [a, b] : [b, a];
@@ -58,10 +59,11 @@ export function pathFindFromMidway(from: Position, to: Position) {
   return path;
 }
 
-function createArtificialVertexAndEdges(position: Position) {
+function createArtificialVertexAndEdges(position: PlayerHarvesterPosition) {
+  const { segmentIndex, coords } = getSegment(position.edge, position.at);
   const vertex: ClientGraphVertex = {
     index: -1,
-    coords: position.coords,
+    coords,
     type: 'artificial',
     pathFind: {
       f: 0,
@@ -72,7 +74,7 @@ function createArtificialVertexAndEdges(position: Position) {
     edges: [],
   };
 
-  const { leftEdge, rightEdge } = splitEdgeByVertex(position.edge, position.segmentIndex, vertex);
+  const { leftEdge, rightEdge } = splitEdgeByVertex(position.edge, segmentIndex, vertex);
   return { vertex, leftEdge, rightEdge };
 }
 

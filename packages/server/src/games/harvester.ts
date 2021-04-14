@@ -27,7 +27,6 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
     },
 
     forward,
-    passed: 0,
     edgeStartTime: 0,
 
     speed: 100,
@@ -57,7 +56,6 @@ export function setHarvesterRoute(
   }
   harvester.position.edge = maybeEdge.edge;
 
-  harvester.passed = 0;
   harvester.edgeStartTime = now;
 
   harvester.forward = maybeEdge.forward;
