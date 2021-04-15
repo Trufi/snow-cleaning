@@ -6,11 +6,12 @@ const joinGame = (token: string) => ({
   token,
 });
 
-const newRoute = (fromAt: number, vertices: ClientGraphVertex[], toAt: number) => ({
+const newRoute = (serverTime: number, fromAt: number, vertices: ClientGraphVertex[], toAt: number) => ({
   type: 'newRoute' as const,
   vertexIndices: vertices.map((vertex) => vertex.index),
   fromAt,
   toAt,
+  time: serverTime,
 });
 
 const ping = (time: number) => ({

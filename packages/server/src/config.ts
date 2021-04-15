@@ -12,7 +12,7 @@ export const config = {
   serverGameStep: 30,
   clientSendChangesInterval: 100,
   clientPingInterval: 500,
-  smoothPingTime: 2000,
+  smoothPingTime: 5000,
 
   /**
    * Если на сервер приходят сообщения старее, чем этот порог, то мы их не принимаем

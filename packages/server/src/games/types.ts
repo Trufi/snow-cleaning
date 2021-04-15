@@ -5,7 +5,8 @@ export interface Position {
   at: number;
 }
 
-export interface HarvesterRoute {
+export interface HarvesterFutureRoute {
+  time: number;
   fromAt: number;
   vertices: ClientGraphVertex[];
   toAt: number;
@@ -14,10 +15,13 @@ export interface HarvesterRoute {
 export interface Harvester {
   playerId: string;
   speed: number;
+  score: number;
 
-  route: HarvesterRoute;
+  futureRoutes: HarvesterFutureRoute[];
+
+  route: HarvesterFutureRoute;
   forward: boolean;
   edgeIndexInRoute: number;
   position: Position;
-  edgeStartTime: number;
+  lastUpdateTime: number;
 }

@@ -17,7 +17,7 @@ import { MousePitchRotate } from '../map/handlers/mousePitchRotate';
 import { TouchZoomRotate } from '../map/handlers/touchZoomRotate';
 import { ServerTime } from './serverTime';
 import { createHarvester, Harvester, updateHarvester } from './harvester';
-import { createPlayerHarvester, PlayerHarvester, updatePlayerHarvester } from './playerHarvester';
+import { PlayerHarvester } from './liveHarvester';
 
 export interface GamePlayer {
   id: string;
@@ -70,7 +70,7 @@ export class Game {
           id: player.id,
           name: player.name,
           score: player.score,
-          harvester: createPlayerHarvester(this.graph, player.harvester),
+          harvester: new PlayerHarvester(this.graph, player.harvester),
         };
         players.set(player.id, gamePlayer);
       }
@@ -165,12 +165,12 @@ export class Game {
       const edge = this.graph.edges[edgeIndex];
       const { coords } = getSegment(edge, at);
       if (gamePlayer.harvester.type === 'player') {
-        gamePlayer.harvester.steps.push({
-          time: data.time,
-          coords,
-          edge,
-          at,
-        });
+        // gamePlayer.harvester.steps.push({
+        //   time: data.time,
+        //   coords,
+        //   edge,
+        //   at,
+        // });
       } else {
         gamePlayer.harvester.steps.push({
           time: data.time,
@@ -179,7 +179,6 @@ export class Game {
       }
     });
 
-    this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.coords));
     renderUI(this.state, this.serverTime);
   }
 
@@ -203,11 +202,13 @@ export class Game {
 
     this.state.players.forEach((player) => {
       if (player.harvester.type === 'player') {
-        updatePlayerHarvester(time, this.serverTime, player.harvester);
+        player.harvester.update(time);
       } else {
         updateHarvester(time, this.serverTime, player.harvester);
       }
     });
+
+    this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.getCoords()));
 
     this.mouseZoom.update();
     this.mousePitchRotate.update();
@@ -215,7 +216,7 @@ export class Game {
 
     this.render.render();
 
-    if (time - this.state.lastGoToPointUpdateTime > 100) {
+    if (time - this.state.lastGoToPointUpdateTime > 300) {
       cmds.push(this.goToPoint());
     }
 
@@ -231,19 +232,23 @@ export class Game {
       return;
     }
     const toPosition = findNearestGraphVertex(this.graph, this.graphVerticesTree, this.state.lastGoToPoint);
+    this.state.lastGoToPoint = undefined;
     if (!toPosition) {
       return;
     }
 
     const harvester = this.state.currentPlayer.harvester;
-    const path = pathFindFromMidway(harvester.position, toPosition);
+    const path = pathFindFromMidway(harvester.getPosition(), toPosition);
     if (!path) {
       return;
     }
 
-    drawRoute(this.render.map, harvester.position, path, toPosition);
+    drawRoute(this.render.map, harvester.getPosition(), path, toPosition);
 
-    return cmd.sendMsg(msg.newRoute(harvester.position.at, path, toPosition.at));
+    harvester.setRoute(this.state.time, harvester.getPosition().at, path, toPosition.at);
+
+    const serverTime = this.state.time - this.serverTime.getDiff();
+    return cmd.sendMsg(msg.newRoute(serverTime, harvester.getPosition().at, path, toPosition.at));
   }
 
   private updatePointsSize() {

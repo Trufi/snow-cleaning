@@ -1,9 +1,10 @@
 import { ClientGraph, ClientGraphVertex } from '@game/data/clientGraph';
 import { clamp } from '@game/utils';
 import { findEdgeFromVertexToVertex } from '@game/utils/graph';
-import { GamePlayer } from '../types';
 import { random } from '../utils';
-import { Harvester } from './types';
+import { Harvester, HarvesterFutureRoute } from './types';
+
+const harvesterDelay = 2000;
 
 export function createHarvester(playerId: string, graph: ClientGraph) {
   const vertexFrom = graph.vertices[Math.floor(random() * graph.vertices.length)];
@@ -14,61 +15,165 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
   const harvester: Harvester = {
     playerId,
 
+    futureRoutes: [],
+
+    score: 0,
+
     route: {
-      fromAt: 0,
-      toAt: 0,
+      time: 0,
+      fromAt: 0.5,
+      toAt: 0.5,
       vertices: forward ? [edge.a, edge.b] : [edge.b, edge.a],
     },
     edgeIndexInRoute: 0,
 
     position: {
       edge,
-      at: 0,
+      at: 0.5,
     },
 
     forward,
-    edgeStartTime: 0,
+    lastUpdateTime: 0,
 
-    speed: 100,
+    speed: 50,
   };
 
   return harvester;
 }
 
-export function setHarvesterRoute(
+export function addHarvesterRouteFromClient(
   harvester: Harvester,
-  now: number,
+  time: number,
   fromAt: number,
   vertices: ClientGraphVertex[],
   toAt: number,
 ) {
-  harvester.route = {
+  harvester.futureRoutes.push({
+    time,
     fromAt,
     vertices,
     toAt,
-  };
+  });
+}
 
-  harvester.position.at = fromAt;
-  const maybeEdge = findEdgeFromVertexToVertex(vertices[0], vertices[1]);
-  if (!maybeEdge) {
-    console.log(`Не найдена кривая пути у игрока ${harvester.playerId}`);
+export function updateHarvester(harvester: Harvester, now: number) {
+  const harvesterTime = now - harvesterDelay;
+
+  const startIndex = findStepInterval(harvesterTime, harvester.futureRoutes);
+  if (startIndex === -1) {
+    // Время следующего шага еще не наступило, но надо проверить мы движемся к нему или еще нет
+    if (harvester.futureRoutes.length) {
+      const nextRoute = harvester.futureRoutes[0];
+      if (
+        nextRoute.fromAt !== harvester.route.toAt ||
+        !sameTEdges(
+          getTEdge(nextRoute.vertices, 0),
+          getTEdge(harvester.route.vertices, harvester.route.vertices.length - 2),
+        )
+      ) {
+        // Если мы еще движемся не к нему, то изменим текущий путь
+        const sameTEdgeIndex = findSameTEdgeInRoute(getTEdge(nextRoute.vertices, 0), harvester.route.vertices);
+        if (sameTEdgeIndex === -1) {
+          console.log('ват ват ват');
+        }
+
+        if (harvester.edgeIndexInRoute >= sameTEdgeIndex) {
+          console.log(`а уже проехали`);
+        }
+        harvester.route.vertices.slice(0, sameTEdgeIndex + 2);
+        harvester.route.toAt = nextRoute.fromAt;
+      }
+    }
+
+    updateHarvesterMove(harvester, harvesterTime);
     return;
   }
+
+  updateHarvesterMove(harvester, harvesterTime);
+
+  const newRoute = harvester.futureRoutes[startIndex];
+  if (!newRoute) {
+    return;
+  }
+
+  const futureRoute = harvester.futureRoutes[startIndex + 1];
+
+  // Если есть еще и будущий путь, то подправляем новый сразу с концом - началом будущего
+  if (futureRoute) {
+    const sameTEdgeIndex = findSameTEdgeInRoute(getTEdge(futureRoute.vertices, 0), newRoute.vertices);
+    if (sameTEdgeIndex === -1) {
+      console.log('2 ват ват ват');
+    }
+    newRoute.vertices.slice(0, sameTEdgeIndex + 2);
+    newRoute.toAt = futureRoute.fromAt;
+  }
+
+  const maybeNewRoute: HarvesterFutureRoute = {
+    time: newRoute.time,
+    vertices: newRoute.vertices,
+    fromAt: newRoute.fromAt,
+    toAt: newRoute.toAt,
+  };
+
+  harvester.futureRoutes.splice(0, startIndex + 1);
+
+  harvester.position.at = maybeNewRoute.fromAt;
+
+  const maybeEdge = findEdgeFromVertexToVertex(maybeNewRoute.vertices[0], maybeNewRoute.vertices[1]);
+  if (!maybeEdge) {
+    console.log(`tttНе найдена кривая пути у игрока ${harvester.playerId}, ${maybeNewRoute.vertices.length}`);
+    return;
+  }
+
   harvester.position.edge = maybeEdge.edge;
 
-  harvester.edgeStartTime = now;
+  harvester.lastUpdateTime = maybeNewRoute.time;
 
   harvester.forward = maybeEdge.forward;
   harvester.edgeIndexInRoute = 0;
+  harvester.route = maybeNewRoute;
 }
 
-export function updateHarvester(_graph: ClientGraph, player: GamePlayer, now: number) {
-  const { harvester } = player;
+interface TEdge {
+  a: ClientGraphVertex;
+  b: ClientGraphVertex;
+}
+
+function getTEdge(vertices: ClientGraphVertex[], index: number) {
+  return { a: vertices[index], b: vertices[index + 1] };
+}
+
+function sameTEdges(edgeA: TEdge, edgeB: TEdge) {
+  return (edgeA.a === edgeB.a && edgeA.b === edgeB.b) || (edgeA.b === edgeB.a && edgeA.a === edgeB.b);
+}
+
+function findSameTEdgeInRoute(edge: TEdge, vertices: ClientGraphVertex[]) {
+  for (let i = 0; i < vertices.length - 1; i++) {
+    const compare = getTEdge(vertices, i);
+    if (sameTEdges(edge, compare)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function findStepInterval(time: number, steps: Array<{ time: number }>): number {
+  // Считаем, что массив отсортирован по возрастанию time
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const step = steps[i];
+    if (step.time <= time) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function updateHarvesterMove(harvester: Harvester, now: number) {
   const { position } = harvester;
 
-  const passedDistanceInEdge = harvester.speed * (now - harvester.edgeStartTime);
+  const passedDistanceInEdge = harvester.speed * (now - harvester.lastUpdateTime);
 
-  harvester.edgeStartTime = now;
+  harvester.lastUpdateTime = now;
   const dx = passedDistanceInEdge / position.edge.length;
 
   const isFinalRouteEdge = harvester.edgeIndexInRoute === harvester.route.vertices.length - 2;
@@ -78,7 +183,7 @@ export function updateHarvester(_graph: ClientGraph, player: GamePlayer, now: nu
 
   // Обновляем загрязнение дороги и начисляем очки
   const nextPollution = clamp(position.edge.pollution - position.edge.pollution * dx, 0, 1);
-  player.score += ((position.edge.pollution - nextPollution) * position.edge.length) / 1000;
+  harvester.score += ((position.edge.pollution - nextPollution) * position.edge.length) / 1000;
   position.edge.pollution = nextPollution;
 
   let endAt: number;

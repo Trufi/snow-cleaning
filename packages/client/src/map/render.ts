@@ -3,7 +3,7 @@ import { RenderContext, SimulationIcons } from '../types';
 import { PointBatch, PointBatchEntity } from './pointBatch';
 import { LineBatch } from './lineBatch';
 import { Harvester } from '../game/harvester';
-import { PlayerHarvester } from '../game/playerHarvester';
+import { PlayerHarvester } from '../game/liveHarvester';
 
 interface RenderPoint {
   harvester: Harvester | PlayerHarvester;
@@ -86,8 +86,9 @@ export class Render {
   public render() {
     for (let i = 0; i < this.points.length; i++) {
       const { point, harvester } = this.points[i];
-      point.position[0] = harvester.coords[0];
-      point.position[1] = harvester.coords[1];
+      const coords = harvester.type === 'player' ? harvester.getCoords() : harvester.coords;
+      point.position[0] = coords[0];
+      point.position[1] = coords[1];
       point.icon = 0;
     }
 

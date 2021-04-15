@@ -5,7 +5,7 @@ import { Cmd, cmd, union } from '../commands';
 import { msg } from '../messages';
 import { config } from '../config';
 import { GameState, GamePlayer, RestartData } from '../types';
-import { createHarvester, setHarvesterRoute, updateHarvester } from './harvester';
+import { addHarvesterRouteFromClient, createHarvester, updateHarvester } from './harvester';
 
 interface GameOptions {
   currentTime: number;
@@ -43,7 +43,7 @@ export class Game {
 
     const cmds: Cmd[] = [];
 
-    updateHarvesters(this.graph, this.state);
+    updateHarvesters(this.state);
     polluteRoads(this.graph, this.state);
 
     // cmds.push(cmd.sendPbfMsgTo(getTickBodyRecipientIds(this.state), pbfMsg.tickData(this.state)));
@@ -113,7 +113,7 @@ export class Game {
 
     const route = data.vertexIndices.map((index) => this.graph.vertices[index]);
 
-    setHarvesterRoute(player.harvester, this.state.time, data.fromAt, route, data.toAt);
+    addHarvesterRouteFromClient(player.harvester, data.time, data.fromAt, route, data.toAt);
   }
 
   public updatePlayerChanges(playerId: string, clientMsg: any): Cmd {
@@ -159,9 +159,9 @@ function needToRestart(state: GameState) {
   return state.restart.need && state.time > state.restart.time;
 }
 
-function updateHarvesters(graph: ClientGraph, state: GameState) {
+function updateHarvesters(state: GameState) {
   state.players.forEach((player) => {
-    updateHarvester(graph, player, state.time);
+    updateHarvester(player.harvester, state.time);
   });
 }
 
