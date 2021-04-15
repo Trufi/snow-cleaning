@@ -1,6 +1,6 @@
 import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 import { FlatQueue } from './flatqueue';
-import { PlayerHarvesterPosition } from '../playerHarvester';
+import { PlayerHarvesterPosition } from '../liveHarvester';
 import { getSegment } from '../../utils';
 
 const list = new FlatQueue<ClientGraphVertex>();

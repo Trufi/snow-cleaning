@@ -1,7 +1,7 @@
 import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 import { projectMapToGeo } from '@game/utils/geo';
 import { findEdgeFromVertexToVertex } from '@game/utils/graph';
-import { PlayerHarvesterPosition } from '../game/playerHarvester';
+import { PlayerHarvesterPosition } from '../game/liveHarvester';
 import { getCircleIcon, getSegment } from '../utils';
 
 interface DrawnRoute {

@@ -74,11 +74,25 @@ export function updateHarvester(harvester: Harvester, now: number) {
         // Если мы еще движемся не к нему, то изменим текущий путь
         const sameTEdgeIndex = findSameTEdgeInRoute(getTEdge(nextRoute.vertices, 0), harvester.route.vertices);
         if (sameTEdgeIndex === -1) {
-          console.log('ват ват ват');
+          console.log(
+            `Не найдена совпадающая грань текущего пути [${harvester.route.vertices
+              .map((v) => v.index)
+              .join(',')}] и следующего [${nextRoute.vertices.map((v) => v.index).join(',')}] у игрока ${
+              harvester.playerId
+            }`,
+          );
         }
 
-        if (harvester.edgeIndexInRoute >= sameTEdgeIndex) {
-          console.log(`а уже проехали`);
+        if (harvester.edgeIndexInRoute > sameTEdgeIndex) {
+          console.log(
+            `Совпадающая грань текущего пути [${harvester.route.vertices
+              .map((v) => v.index)
+              .join(',')}] и следующего [${nextRoute.vertices
+              .map((v) => v.index)
+              .join(',')}] была уже пройдена у игрока ${harvester.playerId}, edgeIndexInRoute = ${
+              harvester.edgeIndexInRoute
+            } `,
+          );
         }
         harvester.route.vertices.slice(0, sameTEdgeIndex + 2);
         harvester.route.toAt = nextRoute.fromAt;
@@ -102,7 +116,13 @@ export function updateHarvester(harvester: Harvester, now: number) {
   if (futureRoute) {
     const sameTEdgeIndex = findSameTEdgeInRoute(getTEdge(futureRoute.vertices, 0), newRoute.vertices);
     if (sameTEdgeIndex === -1) {
-      console.log('2 ват ват ват');
+      console.log(
+        `Не найдена совпадающая грань нового пути [${newRoute.vertices
+          .map((v) => v.index)
+          .join(',')}] и будушего [${futureRoute.vertices.map((v) => v.index).join(',')}] у игрока ${
+          harvester.playerId
+        }`,
+      );
     }
     newRoute.vertices.slice(0, sameTEdgeIndex + 2);
     newRoute.toAt = futureRoute.fromAt;

@@ -38,8 +38,8 @@ const render = new Render(map, icons);
 new Snow(map as any);
 
 // const serverURL = '192.168.3.17:3001';
-const serverURL = '192.168.3.2:3001';
-// const serverURL = 'localhost:3001';
+// const serverURL = '192.168.3.2:3001';
+const serverURL = 'localhost:3001';
 
 fetch(`http://${serverURL}/assets/novosibirsk.json`)
   .then((res) => res.json())

@@ -19,7 +19,8 @@ const getHarvesterData = (harvester: Harvester) => ({
 });
 
 const getPlayerData = (player: GamePlayer) => ({
-  ...pick(player, ['id', 'name', 'score']),
+  ...pick(player, ['id', 'name']),
+  score: player.harvester.score,
   harvester: getHarvesterData(player.harvester),
 });
 export type PlayerData = ReturnType<typeof getPlayerData>;
@@ -60,7 +61,8 @@ const tickData = (game: GameState) => {
     type: 'tickData' as const,
     time: game.time,
     players: mapMap(game.players, (player) => ({
-      ...pick(player, ['id', 'score']),
+      ...pick(player, ['id']),
+      score: player.harvester.score,
       harvester: getHarvesterData(player.harvester),
     })),
   };
