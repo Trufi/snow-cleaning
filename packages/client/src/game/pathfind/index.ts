@@ -81,6 +81,7 @@ function createArtificialVertexAndEdges(position: PlayerHarvesterPosition) {
 function splitEdgeByVertex(edge: ClientGraphEdge, segmentIndex: number, vertex: ClientGraphVertex) {
   const leftEdge: ClientGraphEdge = {
     index: -1,
+    enabled: true,
     type: 'artificial',
     pollution: 0,
     length: 0,
@@ -91,6 +92,7 @@ function splitEdgeByVertex(edge: ClientGraphEdge, segmentIndex: number, vertex: 
 
   const rightEdge: ClientGraphEdge = {
     index: -1,
+    enabled: true,
     type: 'artificial',
     pollution: 0,
     length: 0,

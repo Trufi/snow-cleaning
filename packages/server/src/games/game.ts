@@ -1,6 +1,8 @@
 import { ClientGraph, prepareGraph } from '@game/data/clientGraph';
 import { clamp, findMap, mapMap, mapToArray } from '@game/utils';
 import { ClientMsg } from '@game/client/messages';
+import { vec2dist } from '@game/utils/vec2';
+import { projectGeoToMap } from '@game/utils/geo';
 import { Cmd, cmd, union } from '../commands';
 import { msg } from '../messages';
 import { config } from '../config';
@@ -35,6 +37,7 @@ export class Game {
     };
 
     this.graph = prepareGraph(require('../../../newdata/assets/novosibirsk.json'));
+    enableEdgesInRadius(this.graph, projectGeoToMap([82.92170167330326, 55.028492869990366]), 3 * 1000 * 100);
   }
 
   public update(time: number): Cmd {
@@ -91,7 +94,7 @@ export class Game {
     this.state.players.set(id, gamePlayer);
 
     return [
-      cmd.sendMsg(id, msg.startData(this.state, gamePlayer)),
+      cmd.sendMsg(id, msg.startData(this.state, gamePlayer, this.graph)),
       cmd.sendMsgToAllInGame(msg.playerEnter(gamePlayer)),
     ];
   }
@@ -195,3 +198,11 @@ const restart = (state: GameState): Cmd => {
 
   return [cmd.sendMsgTo(getTickBodyRecipientIds(state), msg.restartData(state)), cmd.notifyMain()];
 };
+
+function enableEdgesInRadius(graph: ClientGraph, center: number[], radius: number) {
+  for (const edge of graph.edges) {
+    if (vec2dist(edge.a.coords, center) < radius || vec2dist(edge.b.coords, center) < radius) {
+      edge.enabled = true;
+    }
+  }
+}

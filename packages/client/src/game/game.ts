@@ -55,6 +55,10 @@ export class Game {
   constructor(private graph: ClientGraph, private render: Render, startData: ServerMsg['startData']) {
     const time = getTime();
 
+    startData.enabledEdges.forEach((edgeIndex) => {
+      this.graph.edges[edgeIndex].enabled = true;
+    });
+
     const players: GameState['players'] = new Map();
     startData.players.forEach((player) => {
       if (player.id !== startData.playerId) {

@@ -25,7 +25,7 @@ const getPlayerData = (player: GamePlayer) => ({
 });
 export type PlayerData = ReturnType<typeof getPlayerData>;
 
-const startData = (game: GameState, player: GamePlayer) => {
+const startData = (game: GameState, player: GamePlayer, graph: ClientGraph) => {
   const players = mapMap(game.players, getPlayerData);
 
   return {
@@ -33,6 +33,7 @@ const startData = (game: GameState, player: GamePlayer) => {
     playerId: player.id,
     endTime: game.startTime + game.duration,
     players,
+    enabledEdges: graph.edges.filter((edge) => edge.enabled).map((edge) => edge.index),
   };
 };
 

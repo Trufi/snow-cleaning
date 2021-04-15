@@ -7,10 +7,9 @@ import { Harvester, HarvesterFutureRoute } from './types';
 const harvesterDelay = 2000;
 
 export function createHarvester(playerId: string, graph: ClientGraph) {
-  const vertexFrom = graph.vertices[Math.floor(random() * graph.vertices.length)];
-
-  const edge = vertexFrom.edges[0];
-  const forward = edge.a === vertexFrom;
+  const enabledEdges = graph.edges.filter((edge) => edge.enabled);
+  const edge = enabledEdges[Math.floor(random() * enabledEdges.length)];
+  const forward = true;
 
   const harvester: Harvester = {
     playerId,
@@ -201,10 +200,12 @@ function updateHarvesterMove(harvester: Harvester, now: number) {
     return;
   }
 
-  // Обновляем загрязнение дороги и начисляем очки
-  const nextPollution = clamp(position.edge.pollution - position.edge.pollution * dx, 0, 1);
-  harvester.score += ((position.edge.pollution - nextPollution) * position.edge.length) / 1000;
-  position.edge.pollution = nextPollution;
+  if (position.edge.enabled) {
+    // Обновляем загрязнение дороги и начисляем очки
+    const nextPollution = clamp(position.edge.pollution - position.edge.pollution * dx, 0, 1);
+    harvester.score += ((position.edge.pollution - nextPollution) * position.edge.length) / 1000;
+    position.edge.pollution = nextPollution;
+  }
 
   let endAt: number;
   if (isFinalRouteEdge) {
