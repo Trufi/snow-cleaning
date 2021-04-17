@@ -1,6 +1,7 @@
 /// <reference path="../node_modules/@2gis/mapgl/global.d.ts" />
 
 import { prepareGraph } from '@game/data/clientGraph';
+import { config } from '@game/server/config';
 import { Snow } from 'mapgl-snow';
 import { InitialState } from './core';
 import { Render } from './map/render';
@@ -39,7 +40,8 @@ new Snow(map as any, { skipWaitingForMapIdle: true });
 
 // const serverURL = '192.168.3.17:3001';
 // const serverURL = '192.168.3.2:3001';
-const serverURL = 'localhost:3001';
+// const serverURL = 'localhost:3001';
+const serverURL = `${config.url}:${config.port}`;
 
 fetch(`http://${serverURL}/assets/novosibirsk.json`)
   .then((res) => res.json())

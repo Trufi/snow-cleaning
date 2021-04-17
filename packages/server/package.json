@@ -11,7 +11,7 @@
   "scripts": {
     "start": "npm run dev",
     "build": "tsc -p tsconfig.json && copyfiles -V -f ../newdata/assets/*.json dist/newdata/assets",
-    "prod": "node -r module-alias/register dist/server/src/index.js",
+    "prod": "node -r dotenv/config -r module-alias/register dist/server/src/index.js dotenv_config_path=\"../../.env\"",
     "dev": "nodemon",
     "lint": "tslint 'src/**/*.ts'",
     "prettier": "prettier --check \"./**/*.{ts,tsx,js,json,html,css}\"",
@@ -44,7 +44,7 @@
       "src/**/*.ts"
     ],
     "ext": "ts",
-    "exec": "ts-node -r tsconfig-paths/register src/index.ts"
+    "exec": "ts-node -r tsconfig-paths/register -r dotenv/config src/index.ts dotenv_config_path=../../.env"
   },
   "_moduleAliases": {
     "@game/utils": "dist/utils/src",

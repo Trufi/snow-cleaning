@@ -26,6 +26,7 @@
     "@2gis/mapgl": "^1.11.2",
     "@types/node": "^14.14.37",
     "@types/rbush": "^3.0.0",
+    "dotenv-webpack": "^7.0.2",
     "fork-ts-checker-webpack-plugin": "^6.0.7",
     "html-webpack-plugin": "^5.0.0-alpha.9",
     "mapgl-snow": "^1.1.0",
