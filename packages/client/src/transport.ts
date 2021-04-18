@@ -11,13 +11,6 @@ export class Transport {
   private ws: WebSocket;
 
   constructor(url: string, private props: TransportProps) {
-    // Если дев сборка, то выключаем ssl
-    if (location.port === '3000') {
-      url = `ws://${url}`;
-    } else {
-      url = `wss://${url}`;
-    }
-
     this.ws = new WebSocket(url);
     this.ws.binaryType = 'arraybuffer';
 

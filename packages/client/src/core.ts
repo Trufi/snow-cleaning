@@ -1,5 +1,6 @@
 import { AnyServerMsg, ServerMsg } from '@game/server/messages';
 import { ClientGraph } from '@game/data/clientGraph';
+import { config } from '@game/server/config';
 import { Transport, TransportProps } from './transport';
 import { msg } from './messages';
 import { Game } from './game/game';
@@ -11,14 +12,14 @@ export class InitialState {
   private messageHandlers: TransportProps;
   private transport: Transport;
 
-  constructor(private graph: ClientGraph, private render: Render, serverURL: string) {
+  constructor(private graph: ClientGraph, private render: Render) {
     this.messageHandlers = {
       onOpen: () => console.log('open'),
       onMessage: this.onServerMessage,
       onClose: () => console.log('close'),
     };
 
-    this.transport = new Transport(serverURL, this.messageHandlers);
+    this.transport = new Transport(config.publicWebSocketURL, this.messageHandlers);
   }
 
   private onServerMessage = (serverMsg: AnyServerMsg) => {

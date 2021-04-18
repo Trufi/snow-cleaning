@@ -1,7 +1,10 @@
 {
   "name": "root",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "build": "npm run build --prefix packages/client && npm run build --prefix packages/server",
+    "start": "npm run prod --prefix packages/server"
+  },
   "devDependencies": {
     "prettier": "^2.2.1"
   },

@@ -11,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/assets', express.static(path.join(__dirname, '../../newdata/assets')));
+app.use(express.static(path.join(__dirname, '../../client/dist')));
 
 const server = app.listen(config.port, () => console.log(`Game server listen on ${config.port} port`));
 
