@@ -25,6 +25,29 @@ module.exports = (env) => {
           test: /(\.vsh|\.fsh)$/i,
           use: 'raw-loader',
         },
+
+        // For pure CSS (without CSS modules)
+        {
+          test: /\.css$/i,
+          exclude: /\.module\.css$/i,
+          use: ['style-loader', 'css-loader'],
+        },
+
+        // For CSS modules
+        {
+          test: /\.module\.css$/i,
+          use: [
+            'style-loader',
+            {
+              loader: 'css-loader',
+              options: {
+                modules: {
+                  localIdentName: mode === 'production' ? 'planner_[hash:base64]' : '[path][name]__[local]',
+                },
+              },
+            },
+          ],
+        },
       ],
     },
 

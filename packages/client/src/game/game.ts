@@ -8,7 +8,7 @@ import { cmd, Cmd, union } from '../commands';
 import { drawMarker, drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
-import { renderUI } from '../renderUI';
+import { renderUI } from '../ui/renderUI';
 import { pathFindFromMidway } from './pathfind';
 import { Position } from '../types';
 import { getAtFromSegment, getSegment, getTime } from '../utils';
@@ -183,7 +183,7 @@ export class Game {
       }
     });
 
-    renderUI(this.state, this.serverTime);
+    renderUI({ state: this.state, serverTime: this.serverTime });
   }
 
   public updatePollutionFromServer(data: ServerMsg['pollutionData']) {
