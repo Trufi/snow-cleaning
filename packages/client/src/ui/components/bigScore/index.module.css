@@ -1,0 +1,39 @@
+.root {
+  position: absolute;
+  top: 0;
+  height: 40px;
+  width: 100%;
+  pointer-events: none;
+  font-size: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  transition: font-size 0.5s;
+}
+
+.low {
+  color: #32af00;
+}
+.medium {
+  color: #ffb81c;
+  font-size: 35px;
+}
+.high {
+  color: #fe5000;
+  font-size: 40px;
+}
+
+.score {
+  position: relative;
+  text-shadow: 1px 1px 0px black;
+}
+
+.speed {
+  position: absolute;
+  bottom: 5px;
+  left: 100%;
+  font-size: 15px;
+  color: #000;
+  text-shadow: none;
+}

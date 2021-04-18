@@ -9,8 +9,8 @@ export function Debug({ serverTime }: DebugProps) {
   return (
     <div className={style.root}>
       <div>Ping: {serverTime.getPing()}</div>
-      <div>Diff: {serverTime.getDiff()}</div>
-      <div>Back: {Math.round(serverTime.getInterpolateTimeShift())}</div>
+      <div>Time diff: {serverTime.getDiff()}</div>
+      <div>Back time: {Math.round(serverTime.getInterpolateTimeShift())}</div>
     </div>
   );
 }

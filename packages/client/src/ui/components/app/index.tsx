@@ -1,5 +1,6 @@
 import { GameState } from '../../../game/game';
 import { ServerTime } from '../../../game/serverTime';
+import { BigScore } from '../bigScore';
 import { Debug } from '../debug';
 import { Rating } from '../rating';
 import style from './index.module.css';
@@ -14,6 +15,7 @@ export function App({ state, serverTime }: AppProps) {
     <div className={style.root}>
       <Debug serverTime={serverTime} />
       <Rating state={state} />
+      <BigScore state={state} />
     </div>
   );
 }
