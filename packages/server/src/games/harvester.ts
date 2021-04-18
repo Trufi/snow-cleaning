@@ -4,12 +4,11 @@ import { findEdgeFromVertexToVertex } from '@game/utils/graph';
 import { random } from '../utils';
 import { Harvester, HarvesterFutureRoute } from './types';
 
-const harvesterDelay = 2000;
+const harvesterDelay = 500;
 
 export function createHarvester(playerId: string, graph: ClientGraph) {
   const enabledEdges = graph.edges.filter((edge) => edge.enabled);
   const edge = enabledEdges[Math.floor(random() * enabledEdges.length)];
-  const forward = true;
 
   const harvester: Harvester = {
     playerId,
@@ -22,7 +21,7 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
       time: 0,
       fromAt: 0.5,
       toAt: 0.5,
-      vertices: forward ? [edge.a, edge.b] : [edge.b, edge.a],
+      vertices: [edge.a, edge.b],
     },
     edgeIndexInRoute: 0,
 
@@ -31,10 +30,10 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
       at: 0.5,
     },
 
-    forward,
+    forward: true,
     lastUpdateTime: 0,
 
-    speed: 50,
+    speed: 75,
   };
 
   return harvester;

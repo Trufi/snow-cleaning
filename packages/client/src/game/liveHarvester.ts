@@ -23,7 +23,7 @@ export class PlayerHarvester {
   private edgeIndexInRoute = 0;
   private forward = true;
   private lastUpdateTime = 0;
-  private speed = 50;
+  private speed: number;
 
   private position: PlayerHarvesterPosition;
   private route: PlayerHarvesterRoute;
@@ -37,6 +37,7 @@ export class PlayerHarvester {
       vertices: [edge.a, edge.b],
     };
 
+    this.speed = data.speed;
     this.position = { edge, at: data.at };
   }
 

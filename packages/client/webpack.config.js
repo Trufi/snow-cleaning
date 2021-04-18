@@ -61,6 +61,7 @@ module.exports = (env) => {
         modules: false,
       },
       disableHostCheck: true,
+      contentBase: path.resolve(__dirname, 'dist'),
     },
   };
 };
