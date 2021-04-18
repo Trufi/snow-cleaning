@@ -2,6 +2,7 @@
   "name": "root",
   "private": true,
   "scripts": {
+    "ci": "npm ci --prefix packages/client && npm ci --prefix packages/server",
     "build": "npm run build --prefix packages/client && npm run build --prefix packages/server",
     "start": "npm run prod --prefix packages/server"
   },
