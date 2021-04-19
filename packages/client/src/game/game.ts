@@ -107,17 +107,20 @@ export class Game {
     this.mousePitchRotate = new MousePitchRotate(this.render.map, handlerContainer);
     this.touchZoomRotate = new TouchZoomRotate(this.render.map, handlerContainer);
 
-    handlerContainer.addEventListener('mousemove', (ev) => {
+    const handleMouseEvent = (ev: MouseEvent) => {
       this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([ev.clientX, ev.clientY]));
       const toPosition = findNearestGraphVertex(this.graph, this.graphVerticesTree, this.state.lastGoToPoint);
       if (toPosition) {
         drawMarker(this.render.map, toPosition.coords);
       }
-    });
+    };
+    handlerContainer.addEventListener('mousemove', handleMouseEvent);
+    handlerContainer.addEventListener('click', handleMouseEvent);
     handlerContainer.addEventListener('touchmove', (ev: TouchEvent) => {
       if (ev.touches.length > 1) {
         return;
       }
+      ev.preventDefault();
       const touch = ev.touches[0];
       this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([touch.clientX, touch.clientY]));
     });
