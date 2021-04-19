@@ -115,13 +115,21 @@ export class Game {
       }
     };
     handlerContainer.addEventListener('mousemove', handleMouseEvent);
-    handlerContainer.addEventListener('click', handleMouseEvent);
-    handlerContainer.addEventListener('touchmove', (ev: TouchEvent) => {
-      if (ev.touches.length > 1) {
+
+    handlerContainer.addEventListener('touchmove', (ev) => {
+      if (ev.touches.length !== 1) {
         return;
       }
       ev.preventDefault();
       const touch = ev.touches[0];
+      this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([touch.clientX, touch.clientY]));
+    });
+    handlerContainer.addEventListener('touchend', (ev) => {
+      if (ev.touches.length > 0 && ev.changedTouches.length !== 1) {
+        return;
+      }
+      ev.preventDefault();
+      const touch = ev.changedTouches[0];
       this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([touch.clientX, touch.clientY]));
     });
 
