@@ -31,7 +31,12 @@ export class InitialState {
 
     switch (serverMsg.type) {
       case 'connect': {
-        this.renderUI({ type: 'connected', onNameSubmit: this.onNameSubmit });
+        const nameFromStorage = localStorage.getItem('playerName');
+        if (nameFromStorage) {
+          this.onNameSubmit(nameFromStorage);
+        } else {
+          this.renderUI({ type: 'connected', onNameSubmit: this.onNameSubmit });
+        }
         break;
       }
 
@@ -43,6 +48,7 @@ export class InitialState {
   };
 
   private onNameSubmit = (name: string) => {
+    localStorage.setItem('playerName', name);
     this.transport.sendMessage(msg.joinGame(name));
   };
 }
