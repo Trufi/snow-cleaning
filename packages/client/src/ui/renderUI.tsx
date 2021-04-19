@@ -7,3 +7,5 @@ const rootUI = document.getElementById('ui');
 export function renderUI(appProps: AppProps) {
   render(<App {...appProps} />, rootUI);
 }
+
+export type RenderUIFunction = typeof renderUI;

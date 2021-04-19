@@ -8,7 +8,6 @@ import { cmd, Cmd, union } from '../commands';
 import { drawMarker, drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
-import { renderUI } from '../ui/renderUI';
 import { pathFindFromMidway } from './pathfind';
 import { Position } from '../types';
 import { getAtFromSegment, getSegment, getTime } from '../utils';
@@ -18,6 +17,7 @@ import { TouchZoomRotate } from '../map/handlers/touchZoomRotate';
 import { ServerTime } from './serverTime';
 import { createHarvester, Harvester, updateHarvester } from './harvester';
 import { PlayerHarvester } from './liveHarvester';
+import { RenderUIFunction } from '../ui/renderUI';
 
 export interface GamePlayer {
   id: string;
@@ -52,7 +52,12 @@ export class Game {
   private touchZoomRotate: TouchZoomRotate;
   private serverTime: ServerTime;
 
-  constructor(private graph: ClientGraph, private render: Render, startData: ServerMsg['startData']) {
+  constructor(
+    private graph: ClientGraph,
+    private render: Render,
+    private renderUI: RenderUIFunction,
+    startData: ServerMsg['startData'],
+  ) {
     const time = getTime();
 
     startData.enabledEdges.forEach((edgeIndex) => {
@@ -183,7 +188,7 @@ export class Game {
       }
     });
 
-    renderUI({ state: this.state, serverTime: this.serverTime });
+    this.renderUI({ type: 'inGame', state: this.state, serverTime: this.serverTime });
   }
 
   public updatePollutionFromServer(data: ServerMsg['pollutionData']) {

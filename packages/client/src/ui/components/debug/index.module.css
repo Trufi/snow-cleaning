@@ -1,7 +1,6 @@
 .root {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 150px;
-  pointer-events: none;
+  bottom: 0;
+  left: 0;
+  font-size: 11px;
 }

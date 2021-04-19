@@ -1,9 +1,9 @@
 import { ClientGraphVertex } from '@game/data/clientGraph';
 import { ObjectElement } from '@game/utils';
 
-const joinGame = (token: string) => ({
+const joinGame = (name: string) => ({
   type: 'joinGame' as const,
-  token,
+  name,
 });
 
 const newRoute = (serverTime: number, fromAt: number, vertices: ClientGraphVertex[], toAt: number) => ({

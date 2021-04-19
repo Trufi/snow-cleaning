@@ -6,11 +6,13 @@ import { msg } from './messages';
 import { Game } from './game/game';
 import { Render } from './map/render';
 import { Cmd, ExistCmd } from './commands';
+import { renderUI, RenderUIFunction } from './ui/renderUI';
 
 export class InitialState {
   public type = 'initial' as const;
   private messageHandlers: TransportProps;
   private transport: Transport;
+  private renderUI = renderUI;
 
   constructor(private graph: ClientGraph, private render: Render) {
     this.messageHandlers = {
@@ -20,6 +22,8 @@ export class InitialState {
     };
 
     this.transport = new Transport(config.publicWebSocketURL, this.messageHandlers);
+
+    this.renderUI({ type: 'initial' });
   }
 
   private onServerMessage = (serverMsg: AnyServerMsg) => {
@@ -27,15 +31,19 @@ export class InitialState {
 
     switch (serverMsg.type) {
       case 'connect': {
-        this.transport.sendMessage(msg.joinGame('token todo'));
+        this.renderUI({ type: 'connected', onNameSubmit: this.onNameSubmit });
         break;
       }
 
       case 'startData': {
-        new InGameState(this.messageHandlers, this.transport, this.graph, this.render, serverMsg);
+        new InGameState(this.messageHandlers, this.transport, this.graph, this.render, this.renderUI, serverMsg);
         break;
       }
     }
+  };
+
+  private onNameSubmit = (name: string) => {
+    this.transport.sendMessage(msg.joinGame(name));
   };
 }
 
@@ -48,10 +56,11 @@ class InGameState {
     private transport: Transport,
     private graph: ClientGraph,
     render: Render,
+    renderUI: RenderUIFunction,
     startData: ServerMsg['startData'],
   ) {
     messageHandlers.onMessage = this.onServerMessage;
-    this.game = new Game(this.graph, render, startData);
+    this.game = new Game(this.graph, render, renderUI, startData);
 
     requestAnimationFrame(this.loop);
   }
@@ -62,10 +71,6 @@ class InGameState {
   };
 
   private onServerMessage = (serverMsg: AnyServerMsg) => {
-    if (serverMsg.type !== 'tickData') {
-      // console.log('message', serverMsg);
-    }
-
     switch (serverMsg.type) {
       case 'tickData': {
         this.game.updateFromServer(serverMsg);

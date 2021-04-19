@@ -141,7 +141,7 @@ export class Core {
           {
             // TODO
             userId: NaN,
-            name: `Anon ${Math.round(Math.random() * 100)}`,
+            name: clientMsg.name,
           },
           'player',
         );
