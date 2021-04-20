@@ -23,14 +23,17 @@ export class Core {
 
     this.connections = new Map();
 
-    this.game = new Game({
-      currentTime: time(),
+    this.game = new Game(
+      {
+        currentTime: time(),
 
-      // TODO: сделать бесконечной, когда уйдет ограничение на time
-      duration: 2 ** 32,
+        // TODO: сделать бесконечной, когда уйдет ограничение на time
+        duration: 2 ** 32,
 
-      maxPlayers: 200,
-    });
+        maxPlayers: 200,
+      },
+      this.executeCmd,
+    );
 
     // Запускаем основной game loop
     const gameLoop = () => {
@@ -181,7 +184,7 @@ export class Core {
     this.transport.sendMessage(connection.id, msg.pong(time(), clientMsg.time));
   }
 
-  private executeCmd(cmd: Cmd) {
+  private executeCmd = (cmd: Cmd) => {
     if (cmd) {
       if (Array.isArray(cmd)) {
         cmd.forEach((c) => this.executeOneCmd(c));
@@ -189,7 +192,7 @@ export class Core {
         this.executeOneCmd(cmd);
       }
     }
-  }
+  };
 
   private executeOneCmd(cmdData: ExistCmd) {
     switch (cmdData.type) {

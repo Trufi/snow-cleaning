@@ -3,6 +3,7 @@ import { breadthFirstTraversal } from '@game/utils/pathfind';
 import { Harvester } from '@game/utils/harvester';
 import { random } from '../../utils';
 import { config } from '../../config';
+import { findEdgeFromVertexToVertex } from '@game/utils/graph';
 
 let idCounter = 0;
 
@@ -12,7 +13,12 @@ export class Bot {
   public readonly name = `Kolyan${Math.round(random() * 100)}`;
   public readonly harvester: Harvester;
 
-  constructor(graph: ClientGraph) {
+  /**
+   * Время жизни: 20сек + [0 - 10]минут
+   */
+  private liveTime = 20000 + random() * 10 * 60 * 1000;
+
+  constructor(graph: ClientGraph, private createTime: number) {
     const enabledEdges = graph.edges.filter((edge) => edge.enabled);
     const edge = enabledEdges[Math.floor(random() * enabledEdges.length)];
     this.harvester = new Harvester(graph, {
@@ -23,12 +29,16 @@ export class Bot {
     });
   }
 
+  public timeIsPassed(now: number) {
+    return now - this.createTime > this.liveTime;
+  }
+
   public update(now: number) {
     if (this.harvester.isFinishedRoute()) {
       const position = this.harvester.getPosition();
       const route = findBestRoute(position.edge);
       if (route) {
-        this.harvester.setRoute(now, position.at, route, 0);
+        this.harvester.setRoute(now, position.at, route.route, route.toAt);
       }
     }
 
@@ -53,5 +63,8 @@ function findBestRoute(edge: ClientGraphEdge) {
     route.unshift(edge.b);
   }
 
-  return route;
+  const lastEdge = findEdgeFromVertexToVertex(route[route.length - 2], route[route.length - 1]);
+  const toAt = lastEdge?.forward ? 1 : 0;
+
+  return { route, toAt };
 }

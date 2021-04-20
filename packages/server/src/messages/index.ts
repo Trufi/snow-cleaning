@@ -1,5 +1,6 @@
 import { ClientGraph } from '@game/data/clientGraph';
 import { ObjectElement, mapMap, pick, round } from '@game/utils';
+import { Bot } from '../games/bot';
 import { Harvester } from '../games/types';
 import { GameState, GamePlayer } from '../types';
 
@@ -25,20 +26,19 @@ const getPlayerData = (player: GamePlayer) => ({
 });
 export type PlayerData = ReturnType<typeof getPlayerData>;
 
+const getBotData = (bot: Bot): PlayerData => ({
+  id: bot.id,
+  name: bot.name,
+  score: bot.harvester.getScore(),
+  harvester: {
+    speed: bot.harvester.getSpeed(),
+    edgeIndex: bot.harvester.getPosition().edge.index,
+    at: bot.harvester.getPosition().at,
+  },
+});
+
 const startData = (game: GameState, player: GamePlayer, graph: ClientGraph) => {
-  const players: PlayerData[] = [
-    ...mapMap(game.players, getPlayerData),
-    ...mapMap(game.bots, (bot) => ({
-      id: bot.id,
-      name: bot.name,
-      score: bot.harvester.getScore(),
-      harvester: {
-        speed: bot.harvester.getSpeed(),
-        edgeIndex: bot.harvester.getPosition().edge.index,
-        at: bot.harvester.getPosition().at,
-      },
-    })),
-  ];
+  const players: PlayerData[] = [...mapMap(game.players, getPlayerData), ...mapMap(game.bots, getBotData)];
 
   return {
     type: 'startData' as const,
@@ -59,9 +59,9 @@ const restartData = (game: GameState) => {
   };
 };
 
-const playerEnter = (player: GamePlayer) => ({
+const playerEnter = (player: GamePlayer | Bot) => ({
   type: 'playerEnter' as const,
-  player: getPlayerData(player),
+  player: player instanceof Bot ? getBotData(player) : getPlayerData(player),
 });
 
 const playerLeave = (playerId: string) => ({

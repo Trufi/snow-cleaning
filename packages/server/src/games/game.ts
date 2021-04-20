@@ -9,6 +9,7 @@ import { config } from '../config';
 import { GameState, GamePlayer, RestartData } from '../types';
 import { addHarvesterRouteFromClient, createHarvester, updateHarvester } from './harvester';
 import { Bot } from './bot';
+import { random } from '../utils';
 
 interface GameOptions {
   currentTime: number;
@@ -20,7 +21,7 @@ export class Game {
   public state: GameState;
   private graph: ClientGraph;
 
-  constructor(options: GameOptions) {
+  constructor(options: GameOptions, private executeCmd: (cmd: Cmd) => void) {
     this.state = {
       startTime: options.currentTime,
       prevTime: options.currentTime,
@@ -41,8 +42,10 @@ export class Game {
     this.graph = prepareGraph(require('../../../newdata/assets/novosibirsk.json'));
     enableEdgesInRadius(this.graph, projectGeoToMap([82.92170167330326, 55.028492869990366]), 2 * 1000 * 100);
 
-    const bot = new Bot(this.graph);
-    this.state.bots.set(bot.id, bot);
+    for (let i = 0; i < 2; i++) {
+      const bot = new Bot(this.graph, this.state.time);
+      this.state.bots.set(bot.id, bot);
+    }
   }
 
   public update(time: number): Cmd {
@@ -52,6 +55,21 @@ export class Game {
     const cmds: Cmd[] = [];
 
     updateHarvesters(this.state);
+
+    this.state.bots.forEach((bot) => {
+      bot.update(this.state.time);
+      if (bot.timeIsPassed(this.state.time)) {
+        this.state.bots.delete(bot.id);
+        cmds.push(cmd.sendMsgToAllInGame(msg.playerLeave(bot.id)));
+
+        setTimeout(() => {
+          const bot = new Bot(this.graph, this.state.time);
+          this.state.bots.set(bot.id, bot);
+          this.executeCmd(cmd.sendMsgToAllInGame(msg.playerEnter(bot)));
+        }, 20000 * random());
+      }
+    });
+
     polluteRoads(this.graph, this.state);
 
     // cmds.push(cmd.sendPbfMsgTo(getTickBodyRecipientIds(this.state), pbfMsg.tickData(this.state)));
@@ -171,8 +189,6 @@ function updateHarvesters(state: GameState) {
   state.players.forEach((player) => {
     updateHarvester(player.harvester, state.time);
   });
-
-  state.bots.forEach((bot) => bot.update(state.time));
 }
 
 function polluteRoads(graph: ClientGraph, state: GameState) {

@@ -1,4 +1,5 @@
 import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
+import { random } from '@game/server/utils';
 import { getSegment } from '@game/utils/graph';
 import { HarvesterPosition } from '../harvester';
 import { FlatQueue } from './flatqueue';
@@ -178,6 +179,8 @@ export function breadthFirstTraversal(
 
   list.clear();
 
+  const pollutionPriorityList = new FlatQueue<ClientGraphVertex>();
+
   firstVertex.pathFind.f = 0;
   firstVertex.pathFind.g = 0;
   firstVertex.pathFind.routeLength = 0;
@@ -189,14 +192,20 @@ export function breadthFirstTraversal(
   let current = list.pop();
   while (current && callback(current.pathFind.g, current.pathFind.routeLength)) {
     for (const edge of getVertexEdges(current)) {
+      if (!edge.enabled) {
+        continue;
+      }
+
       const next = anotherEdgeVertex(edge, current);
       if (next.pathFind.id !== id) {
         next.pathFind.routeLength = current.pathFind.routeLength + 1;
-        next.pathFind.g = current.pathFind.g * edge.length * edge.pollution;
+        const pollution = edge.enabled ? edge.pollution : 0;
+        next.pathFind.g = current.pathFind.g + edge.length * (pollution + random() * 0.5) - edge.length / 10;
         next.pathFind.f = -next.pathFind.g;
         next.pathFind.parent = current;
         next.pathFind.id = id;
-        list.push(next, next.pathFind.f);
+        list.push(next, next.pathFind.routeLength);
+        pollutionPriorityList.push(next, -next.pathFind.g);
       }
       // TODO: надо обновить позицию существующего элемента в очереди https://github.com/qiao/PathFinding.js/blob/master/src/finders/AStarFinder.js#L116
     }
@@ -208,7 +217,7 @@ export function breadthFirstTraversal(
   if (current) {
     const route: ClientGraphVertex[] = [];
 
-    let first: ClientGraphVertex | undefined = current;
+    let first: ClientGraphVertex | undefined = pollutionPriorityList.pop();
     while (first) {
       route.push(first);
       first = first.pathFind.parent;
