@@ -1,5 +1,4 @@
 import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
-import { random } from '@game/server/utils';
 import { getSegment } from '@game/utils/graph';
 import { HarvesterPosition } from '../harvester';
 import { FlatQueue } from './flatqueue';
@@ -200,7 +199,7 @@ export function breadthFirstTraversal(
       if (next.pathFind.id !== id) {
         next.pathFind.routeLength = current.pathFind.routeLength + 1;
         const pollution = edge.enabled ? edge.pollution : 0;
-        next.pathFind.g = current.pathFind.g + edge.length * (pollution + random() * 0.5) - edge.length / 10;
+        next.pathFind.g = current.pathFind.g + edge.length * (pollution + Math.random() * 0.5) - edge.length / 10;
         next.pathFind.f = -next.pathFind.g;
         next.pathFind.parent = current;
         next.pathFind.id = id;
