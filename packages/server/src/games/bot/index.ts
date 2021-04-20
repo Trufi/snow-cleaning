@@ -1,16 +1,23 @@
+import { uniqueNamesGenerator, adjectives, animals, names } from 'unique-names-generator';
 import { ClientGraph, ClientGraphEdge } from '@game/data/clientGraph';
+import { findEdgeFromVertexToVertex } from '@game/utils/graph';
 import { breadthFirstTraversal } from '@game/utils/pathfind';
 import { Harvester } from '@game/utils/harvester';
 import { random } from '../../utils';
 import { config } from '../../config';
-import { findEdgeFromVertexToVertex } from '@game/utils/graph';
 
 let idCounter = 0;
 
 export class Bot {
   public readonly id = `bot/${idCounter++}`;
   public readonly type = 'bot';
-  public readonly name = `Kolyan${Math.round(random() * 100)}`;
+  public readonly name = uniqueNamesGenerator({
+    dictionaries: [adjectives, animals, names],
+    length: 2,
+    separator: '',
+    style: 'capital',
+    seed: Math.round(Math.random() * 10000),
+  });
   public readonly harvester: Harvester;
 
   /**
