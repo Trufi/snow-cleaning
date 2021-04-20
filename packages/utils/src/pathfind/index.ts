@@ -1,7 +1,7 @@
 import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
+import { getSegment } from '@game/utils/graph';
+import { HarvesterPosition } from '../harvester';
 import { FlatQueue } from './flatqueue';
-import { PlayerHarvesterPosition } from '../liveHarvester';
-import { getSegment } from '../../utils';
 
 const list = new FlatQueue<ClientGraphVertex>();
 
@@ -11,7 +11,7 @@ function heuristic(dx: number, dy: number) {
   return dx + dy;
 }
 
-export function pathFindFromMidway(from: PlayerHarvesterPosition, to: PlayerHarvesterPosition) {
+export function pathFindFromMidway(from: HarvesterPosition, to: HarvesterPosition) {
   if (from.edge === to.edge) {
     const { a, b } = from.edge;
     return from.at < to.at ? [a, b] : [b, a];
@@ -59,7 +59,7 @@ export function pathFindFromMidway(from: PlayerHarvesterPosition, to: PlayerHarv
   return path;
 }
 
-function createArtificialVertexAndEdges(position: PlayerHarvesterPosition) {
+function createArtificialVertexAndEdges(position: HarvesterPosition) {
   const { segmentIndex, coords } = getSegment(position.edge, position.at);
   const vertex: ClientGraphVertex = {
     index: -1,
@@ -68,6 +68,7 @@ function createArtificialVertexAndEdges(position: PlayerHarvesterPosition) {
     pathFind: {
       f: 0,
       g: 0,
+      routeLength: 0,
       id: -1,
       parent: undefined,
     },
@@ -143,6 +144,56 @@ function pathFind(firstVertex: ClientGraphVertex, endVertex: ClientGraphVertex) 
         next.pathFind.f =
           next.pathFind.g +
           heuristic(Math.abs(next.coords[0] - endVertex.coords[0]), Math.abs(next.coords[1] - endVertex.coords[1]));
+        next.pathFind.parent = current;
+        next.pathFind.id = id;
+        list.push(next, next.pathFind.f);
+      }
+      // TODO: надо обновить позицию существующего элемента в очереди https://github.com/qiao/PathFinding.js/blob/master/src/finders/AStarFinder.js#L116
+    }
+
+    current = list.pop();
+  }
+
+  // Был найден путь
+  if (current) {
+    const route: ClientGraphVertex[] = [];
+
+    let first: ClientGraphVertex | undefined = current;
+    while (first) {
+      route.push(first);
+      first = first.pathFind.parent;
+    }
+
+    route.reverse();
+
+    return route;
+  }
+}
+
+export function breadthFirstTraversal(
+  firstVertex: ClientGraphVertex,
+  callback: (pollution: number, routeLength: number) => boolean,
+) {
+  const id = idCounter++;
+
+  list.clear();
+
+  firstVertex.pathFind.f = 0;
+  firstVertex.pathFind.g = 0;
+  firstVertex.pathFind.routeLength = 0;
+  firstVertex.pathFind.id = id;
+  firstVertex.pathFind.parent = undefined;
+
+  list.push(firstVertex, 0);
+
+  let current = list.pop();
+  while (current && callback(current.pathFind.g, current.pathFind.routeLength)) {
+    for (const edge of getVertexEdges(current)) {
+      const next = anotherEdgeVertex(edge, current);
+      if (next.pathFind.id !== id) {
+        next.pathFind.routeLength = current.pathFind.routeLength + 1;
+        next.pathFind.g = current.pathFind.g * edge.length * edge.pollution;
+        next.pathFind.f = -next.pathFind.g;
         next.pathFind.parent = current;
         next.pathFind.id = id;
         list.push(next, next.pathFind.f);

@@ -3,6 +3,7 @@ import { clamp } from '@game/utils';
 import { findEdgeFromVertexToVertex } from '@game/utils/graph';
 import { random } from '../utils';
 import { Harvester, HarvesterFutureRoute } from './types';
+import { config } from '../config';
 
 const harvesterDelay = 500;
 
@@ -33,7 +34,7 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
     forward: true,
     lastUpdateTime: 0,
 
-    speed: 75,
+    speed: config.harvesterSpeed,
   };
 
   return harvester;

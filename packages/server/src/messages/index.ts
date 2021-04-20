@@ -13,7 +13,7 @@ const gameJoinFail = () => ({
 });
 
 const getHarvesterData = (harvester: Harvester) => ({
-  ...pick(harvester, ['playerId', 'speed']),
+  ...pick(harvester, ['speed']),
   at: harvester.position.at,
   edgeIndex: harvester.position.edge.index,
 });
@@ -26,7 +26,19 @@ const getPlayerData = (player: GamePlayer) => ({
 export type PlayerData = ReturnType<typeof getPlayerData>;
 
 const startData = (game: GameState, player: GamePlayer, graph: ClientGraph) => {
-  const players = mapMap(game.players, getPlayerData);
+  const players: PlayerData[] = [
+    ...mapMap(game.players, getPlayerData),
+    ...mapMap(game.bots, (bot) => ({
+      id: bot.id,
+      name: bot.name,
+      score: bot.harvester.getScore(),
+      harvester: {
+        speed: bot.harvester.getSpeed(),
+        edgeIndex: bot.harvester.getPosition().edge.index,
+        at: bot.harvester.getPosition().at,
+      },
+    })),
+  ];
 
   return {
     type: 'startData' as const,
@@ -58,14 +70,27 @@ const playerLeave = (playerId: string) => ({
 });
 
 const tickData = (game: GameState) => {
-  return {
-    type: 'tickData' as const,
-    time: game.time,
-    players: mapMap(game.players, (player) => ({
+  const players = [
+    ...mapMap(game.players, (player) => ({
       ...pick(player, ['id']),
       score: player.harvester.score,
       harvester: getHarvesterData(player.harvester),
     })),
+
+    ...mapMap(game.bots, (bot) => ({
+      id: bot.id,
+      score: bot.harvester.getScore(),
+      harvester: {
+        speed: bot.harvester.getSpeed(),
+        edgeIndex: bot.harvester.getPosition().edge.index,
+        at: bot.harvester.getPosition().at,
+      },
+    })),
+  ];
+  return {
+    type: 'tickData' as const,
+    time: game.time,
+    players,
   };
 };
 

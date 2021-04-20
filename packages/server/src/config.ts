@@ -19,4 +19,6 @@ export const config = {
 
   polluteInterval: 100,
   clientPollutionUpdateInterval: 300,
+
+  harvesterSpeed: 75,
 };

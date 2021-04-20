@@ -1,21 +1,29 @@
 import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
-import { PlayerData } from '@game/server/messages';
-import { clamp } from '@game/utils';
-import { findEdgeFromVertexToVertex, getSegment } from '@game/utils/graph';
+import { clamp } from '.';
+import { findEdgeFromVertexToVertex, getSegment } from './graph';
 
-export interface PlayerHarvesterPosition {
+export interface HarvesterPosition {
   edge: ClientGraphEdge;
   at: number;
 }
 
-export interface PlayerHarvesterRoute {
+export interface HarvesterRoute {
   fromAt: number;
   vertices: ClientGraphVertex[];
   toAt: number;
 }
 
-export class PlayerHarvester {
-  public type = 'player' as const;
+export type HarvesterType = 'player' | 'bot';
+
+export interface HarversterInitialData {
+  type: HarvesterType;
+  edge: ClientGraphEdge;
+  at: number;
+  speed: number;
+}
+
+export class Harvester {
+  public readonly type: HarvesterType;
 
   private score = 0;
 
@@ -24,20 +32,19 @@ export class PlayerHarvester {
   private lastUpdateTime = 0;
   private speed: number;
 
-  private position: PlayerHarvesterPosition;
-  private route: PlayerHarvesterRoute;
+  private position: HarvesterPosition;
+  private route: HarvesterRoute;
 
-  constructor(private graph: ClientGraph, data: PlayerData['harvester']) {
-    const edge = this.graph.edges[data.edgeIndex];
-
+  constructor(protected graph: ClientGraph, data: HarversterInitialData) {
+    this.type = data.type;
     this.route = {
       fromAt: data.at,
       toAt: data.at,
-      vertices: [edge.a, edge.b],
+      vertices: [data.edge.a, data.edge.b],
     };
 
     this.speed = data.speed;
-    this.position = { edge, at: data.at };
+    this.position = { edge: data.edge, at: data.at };
   }
 
   public setRoute(now: number, fromAt: number, vertices: ClientGraphVertex[], toAt: number) {
@@ -65,6 +72,10 @@ export class PlayerHarvester {
     return this.score;
   }
 
+  public getSpeed() {
+    return this.score;
+  }
+
   public getCoords() {
     const { coords } = getSegment(this.position.edge, this.position.at);
     return coords;
@@ -74,7 +85,12 @@ export class PlayerHarvester {
     return this.position;
   }
 
-  public update(now: number) {
+  public isFinishedRoute() {
+    const isFinalRouteEdge = this.edgeIndexInRoute === this.route.vertices.length - 2;
+    return isFinalRouteEdge && this.position.at === this.route.toAt;
+  }
+
+  public updateMoving(now: number) {
     const { position } = this;
 
     const passedDistanceInEdge = this.speed * (now - this.lastUpdateTime);

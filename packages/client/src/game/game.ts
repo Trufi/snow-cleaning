@@ -1,16 +1,17 @@
 import RBush from 'rbush';
 import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
+import { pathFindFromMidway } from '@game/utils/pathfind';
 import { ServerMsg } from '@game/server/messages';
 import { getClosestPointOnLineSegment, mapMap } from '@game/utils';
+import { getAtFromSegment, getSegment } from '@game/utils/graph';
 import { projectGeoToMap, projectMapToGeo } from '@game/utils/geo';
 import { vec2dist } from '@game/utils/vec2';
 import { cmd, Cmd, union } from '../commands';
 import { drawMarker, drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
-import { pathFindFromMidway } from './pathfind';
 import { Position } from '../types';
-import { getAtFromSegment, getSegment, getTime } from '../utils';
+import { getTime } from '../utils';
 import { MouseZoom } from '../map/handlers/mouseZoom';
 import { MousePitchRotate } from '../map/handlers/mousePitchRotate';
 import { TouchZoomRotate } from '../map/handlers/touchZoomRotate';
@@ -184,14 +185,7 @@ export class Game {
 
       const edge = this.graph.edges[edgeIndex];
       const { coords } = getSegment(edge, at);
-      if (gamePlayer.harvester.type === 'player') {
-        // gamePlayer.harvester.steps.push({
-        //   time: data.time,
-        //   coords,
-        //   edge,
-        //   at,
-        // });
-      } else {
+      if (gamePlayer.harvester.type !== 'player') {
         gamePlayer.harvester.steps.push({
           time: data.time,
           coords,

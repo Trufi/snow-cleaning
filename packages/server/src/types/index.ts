@@ -1,3 +1,4 @@
+import { Bot } from '../games/bot';
 import { Harvester } from '../games/types';
 
 export interface InitialConnection {
@@ -49,6 +50,7 @@ export interface GameState {
   prevTime: number;
   time: number;
   players: Map<string, GamePlayer>;
+  bots: Map<string, Bot>;
   startTime: number;
   lastPolluteTime: number;
   lastPollutionClientUpdateTime: number;

@@ -1,7 +1,8 @@
 import { ClientGraph } from '@game/data/clientGraph';
 import { vec2lerp } from '@game/utils/vec2';
+import { getSegment } from '@game/utils/graph';
 import { PlayerData } from '@game/server/messages';
-import { findStepInterval, getSegment } from '../utils';
+import { findStepInterval } from '../utils';
 import { ServerTime } from './serverTime';
 
 export interface HarvesterStep {

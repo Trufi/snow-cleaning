@@ -1,57 +1,8 @@
-import { ClientGraphEdge } from '@game/data/clientGraph';
-import { clamp } from '@game/utils';
-import { vec2dist, vec2lerp } from '@game/utils/vec2';
-
 export function createRandomFunction(seed: number) {
   return () => {
     seed = (seed * 16807) % 2147483647;
     return (seed - 1) / 2147483646;
   };
-}
-
-export function getSegment(edge: ClientGraphEdge, at: number) {
-  const { length, geometry } = edge;
-  const distance = length * at;
-
-  let passed = 0;
-
-  for (let i = 0; i < geometry.length - 1; i++) {
-    const segmentLength = vec2dist(geometry[i], geometry[i + 1]);
-    if (passed + segmentLength >= distance) {
-      const coords = [0, 0];
-
-      // Иногда из данных может прийти сегмент нулевой длины
-      const positionAtSegment = segmentLength > 0 ? clamp((distance - passed) / segmentLength, 0, 1) : 0;
-
-      vec2lerp(coords, geometry[i], geometry[i + 1], positionAtSegment);
-      return {
-        segmentIndex: i,
-        positionAtSegment,
-        coords,
-      };
-    }
-    passed += segmentLength;
-  }
-
-  return {
-    segmentIndex: 0,
-    positionAtSegment: 0,
-    coords: [0, 0],
-  };
-}
-
-export function getAtFromSegment(edge: ClientGraphEdge, positionAtSegment: number, segmentIndex: number) {
-  const { length, geometry } = edge;
-
-  let passed = 0;
-
-  for (let i = 0; i < segmentIndex; i++) {
-    passed += vec2dist(geometry[i], geometry[i + 1]);
-  }
-
-  passed += vec2dist(geometry[segmentIndex], geometry[segmentIndex + 1]) * positionAtSegment;
-
-  return passed / length;
 }
 
 export function getCircleIcon(color: string, radius: number, color2 = '#000', radius2 = 0): string {

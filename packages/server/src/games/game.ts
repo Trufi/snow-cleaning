@@ -8,6 +8,7 @@ import { msg } from '../messages';
 import { config } from '../config';
 import { GameState, GamePlayer, RestartData } from '../types';
 import { addHarvesterRouteFromClient, createHarvester, updateHarvester } from './harvester';
+import { Bot } from './bot';
 
 interface GameOptions {
   currentTime: number;
@@ -29,6 +30,7 @@ export class Game {
       duration: options.duration,
       maxPlayers: options.duration,
       players: new Map(),
+      bots: new Map(),
       restart: {
         need: false,
         time: 0,
@@ -38,6 +40,9 @@ export class Game {
 
     this.graph = prepareGraph(require('../../../newdata/assets/novosibirsk.json'));
     enableEdgesInRadius(this.graph, projectGeoToMap([82.92170167330326, 55.028492869990366]), 2 * 1000 * 100);
+
+    const bot = new Bot(this.graph);
+    this.state.bots.set(bot.id, bot);
   }
 
   public update(time: number): Cmd {
@@ -166,6 +171,8 @@ function updateHarvesters(state: GameState) {
   state.players.forEach((player) => {
     updateHarvester(player.harvester, state.time);
   });
+
+  state.bots.forEach((bot) => bot.update(state.time));
 }
 
 function polluteRoads(graph: ClientGraph, state: GameState) {
