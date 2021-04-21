@@ -1,15 +1,15 @@
 import { ClientGraph, prepareGraph } from '@game/data/clientGraph';
-import { clamp, findMap, mapMap, mapToArray } from '@game/utils';
+import { clamp, mapMap, mapToArray } from '@game/utils';
 import { ClientMsg } from '@game/client/messages';
 import { vec2dist } from '@game/utils/vec2';
 import { projectGeoToMap } from '@game/utils/geo';
 import { Cmd, cmd, union } from '../commands';
 import { msg } from '../messages';
 import { config } from '../config';
-import { GameState, GamePlayer, RestartData } from '../types';
-import { addHarvesterRouteFromClient, createHarvester, updateHarvester } from './harvester';
+import { GameState, RestartData } from '../types';
 import { Bot } from './bot';
 import { random } from '../utils';
+import { Player } from './player';
 
 interface GameOptions {
   currentTime: number;
@@ -29,7 +29,7 @@ export class Game {
       lastPolluteTime: options.currentTime,
       lastPollutionClientUpdateTime: options.currentTime,
       duration: options.duration,
-      maxPlayers: options.duration,
+      maxPlayers: options.maxPlayers,
       players: new Map(),
       bots: new Map(),
       restart: {
@@ -54,7 +54,9 @@ export class Game {
 
     const cmds: Cmd[] = [];
 
-    updateHarvesters(this.state);
+    this.state.players.forEach((player) => {
+      player.update(time);
+    });
 
     this.state.bots.forEach((bot) => {
       bot.update(this.state.time);
@@ -88,37 +90,17 @@ export class Game {
     return union(cmds);
   }
 
-  public canPlayerBeAdded(userId: number) {
-    if (this.state.players.size >= this.state.maxPlayers) {
-      return false;
-    }
-    const hasSamePlayer = findMap(this.state.players, (p) => p.userId === userId);
-    return !hasSamePlayer;
+  public canPlayerBeAdded() {
+    return this.state.players.size < this.state.maxPlayers;
   }
 
-  public addPlayer(
-    id: string,
-    data: {
-      userId: number;
-      name: string;
-    },
-  ): Cmd {
-    const { userId, name } = data;
-
-    const harvester = createHarvester(id, this.graph);
-
-    const gamePlayer: GamePlayer = {
-      id,
-      userId,
-      name,
-      score: 0,
-      harvester,
-    };
-    this.state.players.set(id, gamePlayer);
+  public addPlayer(id: string, name: string): Cmd {
+    const player = new Player(id, name, this.graph);
+    this.state.players.set(player.id, player);
 
     return [
-      cmd.sendMsg(id, msg.startData(this.state, gamePlayer, this.graph)),
-      cmd.sendMsgToAllInGame(msg.playerEnter(gamePlayer)),
+      cmd.sendMsg(id, msg.startData(this.state, player, this.graph)),
+      cmd.sendMsgToAllInGame(msg.playerEnter(player)),
     ];
   }
 
@@ -130,16 +112,9 @@ export class Game {
 
   public setPlayerRoute(playerId: string, data: ClientMsg['newRoute']): Cmd {
     const player = this.state.players.get(playerId);
-    if (!player) {
-      // TODO: добавить логирование этого безобразия
-      return;
+    if (player) {
+      player.addRouteFromClient(data);
     }
-
-    // TODO: проверка, что путь валидный, а также что такие индексы вообще есть
-
-    const route = data.vertexIndices.map((index) => this.graph.vertices[index]);
-
-    addHarvesterRouteFromClient(player.harvester, data.time, data.fromAt, route, data.toAt);
   }
 
   public updatePlayerChanges(playerId: string, clientMsg: any): Cmd {
@@ -183,12 +158,6 @@ export class Game {
 
 function needToRestart(state: GameState) {
   return state.restart.need && state.time > state.restart.time;
-}
-
-function updateHarvesters(state: GameState) {
-  state.players.forEach((player) => {
-    updateHarvester(player.harvester, state.time);
-  });
 }
 
 function polluteRoads(graph: ClientGraph, state: GameState) {

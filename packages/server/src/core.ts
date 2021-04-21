@@ -80,11 +80,7 @@ export class Core {
       return;
     }
 
-    console.log(
-      `Connection lost id: ${connection.id}, userId: ${connection.status !== 'initial' && connection.userId} status: ${
-        connection.status
-      }`,
-    );
+    console.log(`Connection lost id: ${connection.id}, status: ${connection.status}`);
     this.connections.delete(id);
 
     switch (connection.status) {
@@ -94,39 +90,29 @@ export class Core {
     }
   };
 
-  public authConnection(
-    connectionId: string,
-    data: {
-      userId: number;
-      name: string;
-    },
-    joinType: 'player',
-  ) {
-    const { userId, name } = data;
-
+  public authConnection(connectionId: string, name: string, joinType: 'player') {
     const connection = this.connections.get(connectionId);
     if (!connection || connection.status !== 'initial') {
       return;
     }
 
     if (joinType === 'player') {
-      const can = this.game.canPlayerBeAdded(userId);
+      const can = this.game.canPlayerBeAdded();
       if (!can) {
-        console.log(`User userId: ${userId} game join fail`);
+        console.log(`User (name: ${name}, connectionId: ${connectionId}) game join fail`);
         this.transport.sendMessage(connection.id, msg.gameJoinFail());
         return;
       }
 
-      console.log(`User (name: ${name}, userId: ${userId}, connectionId: ${connectionId}) join as ${joinType}`);
+      console.log(`User (name: ${name}, connectionId: ${connectionId}) join as ${joinType}`);
 
       this.connections.set(connection.id, {
         status: 'player',
         id: connection.id,
-        userId,
         name,
       });
 
-      this.executeCmd(this.game.addPlayer(connection.id, data));
+      this.executeCmd(this.game.addPlayer(connection.id, name));
     }
   }
 
@@ -139,15 +125,7 @@ export class Core {
   public initialConnectionMessage(connection: InitialConnection, clientMsg: any) {
     switch (clientMsg.type) {
       case 'joinGame':
-        return this.authConnection(
-          connection.id,
-          {
-            // TODO
-            userId: NaN,
-            name: clientMsg.name,
-          },
-          'player',
-        );
+        return this.authConnection(connection.id, clientMsg.name, 'player');
       case 'ping':
         return this.pingMessage(clientMsg, connection);
     }

@@ -1,5 +1,5 @@
 import { Bot } from '../games/bot';
-import { Harvester } from '../games/types';
+import { Player } from '../games/player';
 
 export interface InitialConnection {
   status: 'initial';
@@ -9,11 +9,6 @@ export interface InitialConnection {
 export interface PlayerConnection {
   status: 'player';
   id: string;
-
-  /**
-   * Этот id присылает нам главный сервер
-   */
-  userId: number;
   name: string;
 }
 
@@ -22,19 +17,6 @@ export type Connection = InitialConnection | PlayerConnection;
 export interface ConnectionsState {
   map: Map<number, Connection>;
   nextId: number;
-}
-
-export interface GamePlayer {
-  /**
-   * id равен connectionId
-   */
-  id: string;
-  userId: number;
-  name: string;
-
-  score: number;
-
-  harvester: Harvester;
 }
 
 export interface GameObserver {
@@ -49,7 +31,7 @@ export interface GameObserver {
 export interface GameState {
   prevTime: number;
   time: number;
-  players: Map<string, GamePlayer>;
+  players: Map<string, Player>;
   bots: Map<string, Bot>;
   startTime: number;
   lastPolluteTime: number;

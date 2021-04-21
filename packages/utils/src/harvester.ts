@@ -12,9 +12,8 @@ export interface HarvesterRoute {
   fromAt: number;
   vertices: ClientGraphVertex[];
   toAt: number;
+  edgeIndexInRoute: number;
 }
-
-export type HarvesterType = 'player' | 'bot';
 
 let nextColorIndex = Math.floor(Math.random() * config.colors.length);
 export function getNextColorIndex() {
@@ -23,57 +22,57 @@ export function getNextColorIndex() {
 }
 
 export interface HarversterInitialData {
-  type: HarvesterType;
   edge: ClientGraphEdge;
   at: number;
   speed: number;
 }
 
 export class Harvester {
-  public readonly type: HarvesterType;
   public readonly color = getNextColorIndex();
 
   private score = 0;
 
-  private edgeIndexInRoute = 0;
   private forward = true;
   private lastUpdateTime = 0;
   private speed: number;
 
   private position: HarvesterPosition;
-  private route: HarvesterRoute;
+  private readonly route: HarvesterRoute;
 
   constructor(protected graph: ClientGraph, data: HarversterInitialData) {
-    this.type = data.type;
     this.route = {
       fromAt: data.at,
       toAt: data.at,
       vertices: [data.edge.a, data.edge.b],
+      edgeIndexInRoute: 0,
     };
 
     this.speed = data.speed;
     this.position = { edge: data.edge, at: data.at };
   }
 
-  public setRoute(now: number, fromAt: number, vertices: ClientGraphVertex[], toAt: number) {
-    this.route = {
-      fromAt,
-      vertices,
-      toAt,
-    };
-
-    this.position.at = fromAt;
+  public setRoute(time: number, fromAt: number, vertices: ClientGraphVertex[], toAt: number) {
     const maybeEdge = findEdgeFromVertexToVertex(vertices[0], vertices[1]);
     if (!maybeEdge) {
       console.log(`Не найдена кривая пути`);
       return;
     }
+
+    this.route.fromAt = fromAt;
+    this.route.vertices = vertices;
+    this.route.toAt = toAt;
+    this.route.edgeIndexInRoute = 0;
+
+    this.position.at = fromAt;
     this.position.edge = maybeEdge.edge;
 
-    this.lastUpdateTime = now;
+    this.lastUpdateTime = time;
 
     this.forward = maybeEdge.forward;
-    this.edgeIndexInRoute = 0;
+  }
+
+  public getRoute() {
+    return this.route;
   }
 
   public getScore() {
@@ -81,7 +80,7 @@ export class Harvester {
   }
 
   public getSpeed() {
-    return this.score;
+    return this.speed;
   }
 
   public getCoords() {
@@ -94,27 +93,29 @@ export class Harvester {
   }
 
   public isFinishedRoute() {
-    const isFinalRouteEdge = this.edgeIndexInRoute === this.route.vertices.length - 2;
+    const isFinalRouteEdge = this.route.edgeIndexInRoute === this.route.vertices.length - 2;
     return isFinalRouteEdge && this.position.at === this.route.toAt;
   }
 
-  public updateMoving(now: number) {
+  public updateMoving(time: number) {
     const { position } = this;
 
-    const passedDistanceInEdge = this.speed * (now - this.lastUpdateTime);
+    const passedDistanceInEdge = this.speed * (time - this.lastUpdateTime);
 
-    this.lastUpdateTime = now;
+    this.lastUpdateTime = time;
     const dx = position.edge.length ? passedDistanceInEdge / position.edge.length : 1;
 
-    const isFinalRouteEdge = this.edgeIndexInRoute === this.route.vertices.length - 2;
+    const isFinalRouteEdge = this.route.edgeIndexInRoute === this.route.vertices.length - 2;
     if (isFinalRouteEdge && position.at === this.route.toAt) {
       return;
     }
 
-    // Обновляем загрязнение дороги и начисляем очки
-    const nextPollution = clamp(position.edge.pollution - position.edge.pollution * dx, 0, 1);
-    this.score += ((position.edge.pollution - nextPollution) * position.edge.length) / 1000;
-    position.edge.pollution = nextPollution;
+    if (position.edge.enabled) {
+      // Обновляем загрязнение дороги и начисляем очки
+      const nextPollution = clamp(position.edge.pollution - position.edge.pollution * dx, 0, 1);
+      this.score += ((position.edge.pollution - nextPollution) * position.edge.length) / 1000;
+      position.edge.pollution = nextPollution;
+    }
 
     let endAt: number;
     if (isFinalRouteEdge) {
@@ -136,10 +137,10 @@ export class Harvester {
       if (isFinalRouteEdge) {
         position.at = this.route.toAt;
       } else {
-        this.edgeIndexInRoute++;
+        this.route.edgeIndexInRoute++;
         const maybeEdge = findEdgeFromVertexToVertex(
-          this.route.vertices[this.edgeIndexInRoute],
-          this.route.vertices[this.edgeIndexInRoute + 1],
+          this.route.vertices[this.route.edgeIndexInRoute],
+          this.route.vertices[this.route.edgeIndexInRoute + 1],
         );
         if (maybeEdge) {
           position.at = maybeEdge.forward ? 0 : 1;

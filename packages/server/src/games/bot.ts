@@ -3,8 +3,8 @@ import { ClientGraph, ClientGraphEdge } from '@game/data/clientGraph';
 import { findEdgeFromVertexToVertex } from '@game/utils/graph';
 import { breadthFirstTraversal } from '@game/utils/pathfind';
 import { Harvester } from '@game/utils/harvester';
-import { random } from '../../utils';
-import { config } from '../../config';
+import { random } from '../utils';
+import { config } from '../config';
 
 let idCounter = 0;
 
@@ -29,7 +29,6 @@ export class Bot {
     const enabledEdges = graph.edges.filter((edge) => edge.enabled);
     const edge = enabledEdges[Math.floor(random() * enabledEdges.length)];
     this.harvester = new Harvester(graph, {
-      type: 'bot',
       edge,
       at: 0,
       speed: config.harvesterSpeed,
