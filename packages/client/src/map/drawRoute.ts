@@ -1,7 +1,7 @@
 import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
 import { projectMapToGeo } from '@game/utils/geo';
 import { findEdgeFromVertexToVertex, getSegment } from '@game/utils/graph';
-import { PlayerHarvesterPosition } from '../game/liveHarvester';
+import { HarvesterPosition } from '@game/utils/harvester';
 import { getCircleIcon } from '../utils';
 
 interface DrawnRoute {
@@ -12,9 +12,9 @@ let drawnRoute: DrawnRoute | undefined;
 
 export function drawRoute(
   map: mapgl.Map,
-  fromPosition: PlayerHarvesterPosition,
+  fromPosition: HarvesterPosition,
   path: ClientGraphVertex[],
-  toPosition: PlayerHarvesterPosition,
+  toPosition: HarvesterPosition,
 ) {
   if (drawnRoute) {
     drawnRoute.path.destroy();

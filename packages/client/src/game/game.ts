@@ -17,7 +17,7 @@ import { MousePitchRotate } from '../map/handlers/mousePitchRotate';
 import { TouchZoomRotate } from '../map/handlers/touchZoomRotate';
 import { ServerTime } from './serverTime';
 import { createHarvester, Harvester, updateHarvester } from './harvester';
-import { PlayerHarvester } from './liveHarvester';
+import { Harvester as PlayerHarvester } from '@game/utils/harvester';
 import { RenderUIFunction } from '../ui/renderUI';
 
 export interface GamePlayer {
@@ -80,7 +80,10 @@ export class Game {
           id: player.id,
           name: player.name,
           score: player.score,
-          harvester: new PlayerHarvester(this.graph, player.harvester),
+          harvester: new PlayerHarvester(this.graph, {
+            ...player.harvester,
+            edge: this.graph.edges[player.harvester.edgeIndex],
+          }),
         };
         players.set(player.id, gamePlayer);
       }
@@ -185,8 +188,10 @@ export class Game {
 
       const edge = this.graph.edges[edgeIndex];
       const { coords } = getSegment(edge, at);
-      if (gamePlayer.harvester.type !== 'player') {
-        gamePlayer.harvester.steps.push({
+
+      const { harvester } = gamePlayer;
+      if (!(harvester instanceof PlayerHarvester)) {
+        harvester.steps.push({
           time: data.time,
           coords,
         });
@@ -214,11 +219,11 @@ export class Game {
 
     cmds.push(this.serverTime.update(time));
 
-    this.state.players.forEach((player) => {
-      if (player.harvester.type === 'player') {
-        player.harvester.update(time);
+    this.state.players.forEach(({ harvester }) => {
+      if (harvester instanceof PlayerHarvester) {
+        harvester.updateMoving(time);
       } else {
-        updateHarvester(time, this.serverTime, player.harvester);
+        updateHarvester(time, this.serverTime, harvester);
       }
     });
 

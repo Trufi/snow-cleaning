@@ -1,9 +1,9 @@
+import { Harvester as PlayerHarvester } from '@game/utils/harvester';
 import { ClientGraphEdge } from '@game/data/clientGraph';
 import { RenderContext } from '../types';
 import { PointBatch, PointBatchEntity, PointIcon } from './pointBatch';
 import { LineBatch } from './lineBatch';
 import { Harvester } from '../game/harvester';
-import { PlayerHarvester } from '../game/liveHarvester';
 
 interface RenderPoint {
   harvester: Harvester | PlayerHarvester;
@@ -86,7 +86,7 @@ export class Render {
   public render() {
     for (let i = 0; i < this.points.length; i++) {
       const { point, harvester } = this.points[i];
-      const coords = harvester.type === 'player' ? harvester.getCoords() : harvester.coords;
+      const coords = harvester instanceof PlayerHarvester ? harvester.getCoords() : harvester.coords;
       point.position[0] = coords[0];
       point.position[1] = coords[1];
       point.icon = harvester.color;
