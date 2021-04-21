@@ -96,7 +96,7 @@ export class Harvester {
     const passedDistanceInEdge = this.speed * (now - this.lastUpdateTime);
 
     this.lastUpdateTime = now;
-    const dx = passedDistanceInEdge / position.edge.length;
+    const dx = position.edge.length ? passedDistanceInEdge / position.edge.length : 1;
 
     const isFinalRouteEdge = this.edgeIndexInRoute === this.route.vertices.length - 2;
     if (isFinalRouteEdge && position.at === this.route.toAt) {

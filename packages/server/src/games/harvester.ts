@@ -193,7 +193,7 @@ function updateHarvesterMove(harvester: Harvester, now: number) {
   const passedDistanceInEdge = harvester.speed * (now - harvester.lastUpdateTime);
 
   harvester.lastUpdateTime = now;
-  const dx = passedDistanceInEdge / position.edge.length;
+  const dx = position.edge.length ? passedDistanceInEdge / position.edge.length : 1;
 
   const isFinalRouteEdge = harvester.edgeIndexInRoute === harvester.route.vertices.length - 2;
   if (isFinalRouteEdge && position.at === harvester.route.toAt) {
