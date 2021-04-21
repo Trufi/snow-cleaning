@@ -1,6 +1,6 @@
 import { ClientGraphEdge } from '@game/data/clientGraph';
-import { RenderContext, SimulationIcons } from '../types';
-import { PointBatch, PointBatchEntity } from './pointBatch';
+import { RenderContext } from '../types';
+import { PointBatch, PointBatchEntity, PointIcon } from './pointBatch';
 import { LineBatch } from './lineBatch';
 import { Harvester } from '../game/harvester';
 import { PlayerHarvester } from '../game/liveHarvester';
@@ -17,7 +17,7 @@ export class Render {
   private points: RenderPoint[];
   private lineBatch: LineBatch;
 
-  constructor(public map: mapgl.Map, icons: SimulationIcons) {
+  constructor(public map: mapgl.Map, icons: PointIcon[]) {
     this.canvas = document.createElement('canvas');
     this.canvas.style.position = 'absolute';
     this.canvas.style.left = '0';
@@ -54,7 +54,7 @@ export class Render {
 
     gl.clearColor(0, 0, 0, 0);
 
-    this.pointBatch = new PointBatch(this.renderContext, [icons.virgin]);
+    this.pointBatch = new PointBatch(this.renderContext, icons);
 
     this.lineBatch = new LineBatch(this.renderContext);
   }
@@ -63,7 +63,7 @@ export class Render {
     this.points = harversters.map((harvester) => ({
       harvester,
       point: {
-        icon: 0,
+        icon: harvester.color,
         position: [0, 0],
       },
     }));
@@ -89,7 +89,7 @@ export class Render {
       const coords = harvester.type === 'player' ? harvester.getCoords() : harvester.coords;
       point.position[0] = coords[0];
       point.position[1] = coords[1];
-      point.icon = 0;
+      point.icon = harvester.color;
     }
 
     const { gl } = this.renderContext;

@@ -16,6 +16,7 @@ export interface Harvester {
   playerId: string;
   speed: number;
   score: number;
+  color: number;
 
   futureRoutes: HarvesterFutureRoute[];
 

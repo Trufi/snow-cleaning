@@ -1,5 +1,6 @@
 import { ClientGraph, ClientGraphVertex } from '@game/data/clientGraph';
 import { clamp } from '@game/utils';
+import { getNextColorIndex } from '@game/utils/harvester';
 import { findEdgeFromVertexToVertex } from '@game/utils/graph';
 import { random } from '../utils';
 import { Harvester, HarvesterFutureRoute } from './types';
@@ -17,6 +18,7 @@ export function createHarvester(playerId: string, graph: ClientGraph) {
     futureRoutes: [],
 
     score: 0,
+    color: getNextColorIndex(),
 
     route: {
       time: 0,

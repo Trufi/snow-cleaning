@@ -36,20 +36,6 @@ export interface Human {
   startTime: number;
 }
 
-export type SimulationIconSize = number | Array<[number, number]>;
-
-export interface SimulationIcons {
-  virgin: {
-    width: SimulationIconSize;
-    height: SimulationIconSize;
-    url: string;
-  };
-}
-
-export interface SimulationOptions {
-  icons: SimulationIcons;
-}
-
 export interface RenderContext {
   gl: WebGLRenderingContext;
   extensions: { OES_vertex_array_object: OES_vertex_array_object };

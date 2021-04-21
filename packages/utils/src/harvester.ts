@@ -1,4 +1,5 @@
 import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
+import { config } from '@game/server/config';
 import { clamp } from '.';
 import { findEdgeFromVertexToVertex, getSegment } from './graph';
 
@@ -15,6 +16,12 @@ export interface HarvesterRoute {
 
 export type HarvesterType = 'player' | 'bot';
 
+let nextColorIndex = Math.floor(Math.random() * config.colors.length);
+export function getNextColorIndex() {
+  nextColorIndex = (nextColorIndex + 1) % config.colors.length;
+  return nextColorIndex;
+}
+
 export interface HarversterInitialData {
   type: HarvesterType;
   edge: ClientGraphEdge;
@@ -24,6 +31,7 @@ export interface HarversterInitialData {
 
 export class Harvester {
   public readonly type: HarvesterType;
+  public readonly color = getNextColorIndex();
 
   private score = 0;
 

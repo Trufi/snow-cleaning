@@ -21,4 +21,6 @@ export const config = {
   clientPollutionUpdateInterval: 300,
 
   harvesterSpeed: 75,
+
+  colors: ['#0089ff', '#4db347', '#179298', '#a9b313', '#ff9f28', '#ff2828', '#ff28a9', '#c028ff'],
 };

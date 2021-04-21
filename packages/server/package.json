@@ -53,6 +53,7 @@
   "_moduleAliases": {
     "@game/utils": "dist/utils/src",
     "@game/client": "dist/client/src",
+    "@game/server": "dist/server/src",
     "@game/data": "dist/data"
   }
 }

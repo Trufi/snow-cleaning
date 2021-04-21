@@ -1,4 +1,5 @@
 import { mapToArray } from '@game/utils';
+import { config } from '@game/server/config';
 import { GameState } from '../../../game/game';
 import style from './index.module.css';
 
@@ -22,7 +23,10 @@ export function Rating({ state }: RatingProps) {
     <div className={style.root}>
       {shownPlayers.map((player, index) => (
         <div key={player.id} className={style.row}>
-          {minIndex + index + 1}. {player.name} – {Math.round(player.score)}
+          <span className={style.number} style={{ border: `2px solid ${config.colors[player.harvester.color]}` }}>
+            {minIndex + index + 1}
+          </span>{' '}
+          {player.name} – {Math.round(player.score)}
         </div>
       ))}
     </div>

@@ -268,8 +268,8 @@ function loadImage(url: string) {
 function createAtlas(sourceIcons: PointIcon[]) {
   const margin = 1;
 
-  let x = 0;
-  const y = margin;
+  let x = margin;
+  let y = margin;
 
   // index -> zoom, element -> [index -> type, element -> Icon]
   const icons: AtlasIcon[][] = [];
@@ -284,12 +284,23 @@ function createAtlas(sourceIcons: PointIcon[]) {
     let prevIconZoom = -1;
     let prevIcon: AtlasIcon | undefined;
 
+    let maxHeight = 0;
+
     for (let i = 0; i < curveWidth.length; i++) {
       const zoom = curveWidth[i][0];
 
       x += margin;
       const w = curveWidth[i][1] * window.devicePixelRatio;
       const h = curveHeight[i][1] * window.devicePixelRatio;
+
+      maxHeight = Math.max(maxHeight, h);
+
+      if (x + w + margin > atlasSize[0]) {
+        x = margin;
+        y += maxHeight + margin * 2;
+        maxHeight = 0;
+      }
+
       const icon: AtlasIcon = { x, y, w, h };
       x += margin + w;
 

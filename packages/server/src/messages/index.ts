@@ -14,7 +14,7 @@ const gameJoinFail = () => ({
 });
 
 const getHarvesterData = (harvester: Harvester) => ({
-  ...pick(harvester, ['speed']),
+  ...pick(harvester, ['speed', 'color']),
   at: harvester.position.at,
   edgeIndex: harvester.position.edge.index,
 });
@@ -31,6 +31,7 @@ const getBotData = (bot: Bot): PlayerData => ({
   name: bot.name,
   score: bot.harvester.getScore(),
   harvester: {
+    color: bot.harvester.color,
     speed: bot.harvester.getSpeed(),
     edgeIndex: bot.harvester.getPosition().edge.index,
     at: bot.harvester.getPosition().at,

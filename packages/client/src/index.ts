@@ -1,10 +1,11 @@
 /// <reference path="../node_modules/@2gis/mapgl/global.d.ts" />
 
 import { prepareGraph } from '@game/data/clientGraph';
+import { config } from '@game/server/config';
 import { Snow } from 'mapgl-snow';
 import { InitialState } from './core';
+import { PointIcon, PointIconSize } from './map/pointBatch';
 import { Render } from './map/render';
-import { SimulationIcons } from './types';
 import { getCircleIcon } from './utils';
 
 const map = ((window as any).map = new mapgl.Map('map', {
@@ -18,20 +19,18 @@ const map = ((window as any).map = new mapgl.Map('map', {
 
 window.addEventListener('resize', () => map.invalidateSize());
 
-const iconSize: Array<[number, number]> = [
+const iconSize: PointIconSize = [
   [8, 10],
   [10, 15],
   [15, 18],
   [16, 20],
 ];
 
-const icons: SimulationIcons = {
-  virgin: {
-    width: iconSize,
-    height: iconSize,
-    url: getCircleIcon('#0089ff', 10, '#ffffff', 5),
-  },
-};
+const icons: PointIcon[] = config.colors.map((color) => ({
+  width: iconSize,
+  height: iconSize,
+  url: getCircleIcon(color, 10, '#ffffff', 5),
+}));
 
 const render = new Render(map, icons);
 

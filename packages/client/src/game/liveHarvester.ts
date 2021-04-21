@@ -15,7 +15,8 @@ export interface PlayerHarvesterRoute {
 }
 
 export class PlayerHarvester {
-  public type = 'player' as const;
+  public readonly type = 'player' as const;
+  public color: number;
 
   private score = 0;
 
@@ -37,6 +38,7 @@ export class PlayerHarvester {
     };
 
     this.speed = data.speed;
+    this.color = data.color;
     this.position = { edge, at: data.at };
   }
 

@@ -15,6 +15,7 @@ export interface Harvester {
   speed: number;
   coords: number[];
   steps: HarvesterStep[];
+  color: number;
 }
 
 export function createHarvester(graph: ClientGraph, serverHarvester: PlayerData['harvester']) {
@@ -25,6 +26,7 @@ export function createHarvester(graph: ClientGraph, serverHarvester: PlayerData[
     speed: serverHarvester.speed,
     coords,
     steps: [],
+    color: serverHarvester.color,
   };
   return harvester;
 }
