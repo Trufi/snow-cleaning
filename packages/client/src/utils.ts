@@ -36,18 +36,3 @@ const startTime = Date.now();
 export function getTime() {
   return Date.now() - startTime;
 }
-
-/**
- * Возвращает индекс стартового элемента в steps
- * Конечный элемент будет i + 1
- */
-export function findStepInterval(time: number, steps: Array<{ time: number }>): number {
-  // Считаем, что массив отсортирован по возрастанию time
-  for (let i = steps.length - 2; i >= 0; i--) {
-    const step = steps[i];
-    if (step.time <= time) {
-      return i;
-    }
-  }
-  return -1;
-}

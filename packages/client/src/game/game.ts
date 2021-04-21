@@ -1,37 +1,34 @@
-import RBush from 'rbush';
-import { ClientGraph, ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
+import { ClientGraph } from '@game/data/clientGraph';
 import { pathFindFromMidway } from '@game/utils/pathfind';
 import { ServerMsg } from '@game/server/messages';
-import { getClosestPointOnLineSegment, mapMap } from '@game/utils';
-import { getAtFromSegment, getSegment } from '@game/utils/graph';
+import { mapMap } from '@game/utils';
 import { projectGeoToMap, projectMapToGeo } from '@game/utils/geo';
-import { vec2dist } from '@game/utils/vec2';
+import { Harvester } from '@game/utils/harvester';
 import { cmd, Cmd, union } from '../commands';
 import { drawMarker, drawRoute } from '../map/drawRoute';
 import { Render } from '../map/render';
 import { msg } from '../messages';
-import { Position } from '../types';
 import { getTime } from '../utils';
 import { MouseZoom } from '../map/handlers/mouseZoom';
 import { MousePitchRotate } from '../map/handlers/mousePitchRotate';
 import { TouchZoomRotate } from '../map/handlers/touchZoomRotate';
 import { ServerTime } from './serverTime';
-import { createHarvester, Harvester, updateHarvester } from './harvester';
-import { Harvester as PlayerHarvester } from '@game/utils/harvester';
+import { InterpolatedHarvester } from './interpolatedHarvester';
 import { RenderUIFunction } from '../ui/renderUI';
+import { VertexFinder } from './vertexFinder';
 
 export interface GamePlayer {
   id: string;
   name: string;
   score: number;
-  harvester: Harvester | PlayerHarvester;
+  harvester: InterpolatedHarvester | Harvester;
 }
 
 export interface CurrentGamePlayer {
   id: string;
   name: string;
   score: number;
-  harvester: PlayerHarvester;
+  harvester: Harvester;
 }
 
 export interface GameState {
@@ -47,11 +44,11 @@ export interface GameState {
 
 export class Game {
   private state: GameState;
-  private graphVerticesTree: RBush<{ vertex: ClientGraphVertex }>;
   private mouseZoom: MouseZoom;
   private mousePitchRotate: MousePitchRotate;
   private touchZoomRotate: TouchZoomRotate;
   private serverTime: ServerTime;
+  private vertexFinder: VertexFinder;
 
   constructor(
     private graph: ClientGraph,
@@ -61,18 +58,27 @@ export class Game {
   ) {
     const time = getTime();
 
+    this.serverTime = new ServerTime(time);
+    this.vertexFinder = new VertexFinder(graph);
+
     startData.enabledEdges.forEach((edgeIndex) => {
       this.graph.edges[edgeIndex].enabled = true;
     });
 
     const players: GameState['players'] = new Map();
     startData.players.forEach((player) => {
+      const harvesterData = {
+        ...player.harvester,
+        score: player.score,
+        edge: this.graph.edges[player.harvester.edgeIndex],
+      };
+
       if (player.id !== startData.playerId) {
         const gamePlayer: GamePlayer = {
           id: player.id,
           name: player.name,
           score: player.score,
-          harvester: createHarvester(this.graph, player.harvester),
+          harvester: new InterpolatedHarvester(this.serverTime, harvesterData),
         };
         players.set(player.id, gamePlayer);
       } else {
@@ -80,10 +86,7 @@ export class Game {
           id: player.id,
           name: player.name,
           score: player.score,
-          harvester: new PlayerHarvester(this.graph, {
-            ...player.harvester,
-            edge: this.graph.edges[player.harvester.edgeIndex],
-          }),
+          harvester: new Harvester(harvesterData),
         };
         players.set(player.id, gamePlayer);
       }
@@ -99,9 +102,6 @@ export class Game {
       lastGoToPointUpdateTime: time,
     };
 
-    this.graphVerticesTree = new RBush();
-    this.graphVerticesTree.load(this.graph.vertices.map((vertex) => createPoint(vertex.coords, vertex)));
-
     this.updatePointsSize();
 
     this.render.setLines(this.graph.edges, this.graph.min, this.graph.max);
@@ -113,7 +113,7 @@ export class Game {
 
     const handleMouseEvent = (ev: MouseEvent) => {
       this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([ev.clientX, ev.clientY]));
-      const toPosition = findNearestGraphVertex(this.graph, this.graphVerticesTree, this.state.lastGoToPoint);
+      const toPosition = this.vertexFinder.findNearest(this.state.lastGoToPoint);
       if (toPosition) {
         drawMarker(this.render.map, toPosition.coords);
       }
@@ -136,8 +136,6 @@ export class Game {
       const touch = ev.changedTouches[0];
       this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([touch.clientX, touch.clientY]));
     });
-
-    this.serverTime = new ServerTime(time);
   }
 
   public addPlayer(data: ServerMsg['playerEnter']) {
@@ -151,12 +149,17 @@ export class Game {
       return;
     }
 
-    const harvester = createHarvester(this.graph, player.harvester);
+    const harvesterData = {
+      ...player.harvester,
+      score: player.score,
+      edge: this.graph.edges[player.harvester.edgeIndex],
+    };
+
     const gamePlayer: GamePlayer = {
       id: player.id,
       name: player.name,
       score: player.score,
-      harvester,
+      harvester: new InterpolatedHarvester(this.serverTime, harvesterData),
     };
 
     this.state.players.set(player.id, gamePlayer);
@@ -186,15 +189,10 @@ export class Game {
 
       gamePlayer.score = score;
 
-      const edge = this.graph.edges[edgeIndex];
-      const { coords } = getSegment(edge, at);
-
       const { harvester } = gamePlayer;
-      if (!(harvester instanceof PlayerHarvester)) {
-        harvester.steps.push({
-          time: data.time,
-          coords,
-        });
+
+      if (harvester instanceof InterpolatedHarvester) {
+        harvester.addStep(data.time, this.graph.edges[edgeIndex], at);
       }
     });
 
@@ -219,13 +217,7 @@ export class Game {
 
     cmds.push(this.serverTime.update(time));
 
-    this.state.players.forEach(({ harvester }) => {
-      if (harvester instanceof PlayerHarvester) {
-        harvester.updateMoving(time);
-      } else {
-        updateHarvester(time, this.serverTime, harvester);
-      }
-    });
+    this.state.players.forEach(({ harvester }) => harvester.updateMoving(time));
 
     this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.getCoords()));
 
@@ -250,7 +242,7 @@ export class Game {
     if (!this.state.lastGoToPoint) {
       return;
     }
-    const toPosition = findNearestGraphVertex(this.graph, this.graphVerticesTree, this.state.lastGoToPoint);
+    const toPosition = this.vertexFinder.findNearest(this.state.lastGoToPoint);
     this.state.lastGoToPoint = undefined;
     if (!toPosition) {
       return;
@@ -277,72 +269,4 @@ export class Game {
       this.graph.max,
     );
   }
-}
-
-function findNearestGraphVertex(
-  graph: ClientGraph,
-  graphVerticesTree: RBush<{ vertex: ClientGraphVertex }>,
-  point: number[],
-) {
-  const offset = 131072; // половина размера тайла 14-го зума
-
-  const vertices = graphVerticesTree.search(createPointBBox(point, offset)).map((res) => res.vertex);
-  const edgeIndices = new Set<number>();
-  for (const vertex of vertices) {
-    for (const edge of vertex.edges) {
-      edgeIndices.add(edge.index);
-    }
-  }
-
-  let minDistance = offset;
-  let nearest: { edge: ClientGraphEdge; segmentIndex: number; positionAtSegment: number; coords: number[] } | undefined;
-
-  edgeIndices.forEach((index) => {
-    const edge = graph.edges[index];
-
-    for (let i = 0; i < edge.geometry.length - 1; i++) {
-      const closestPoint = getClosestPointOnLineSegment(point, edge.geometry[i], edge.geometry[i + 1]);
-      const distance = vec2dist(point, closestPoint.point);
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearest = {
-          edge,
-          segmentIndex: i,
-          positionAtSegment: closestPoint.t,
-          coords: closestPoint.point,
-        };
-      }
-    }
-  });
-
-  if (nearest) {
-    const position: Position = {
-      edge: nearest.edge,
-      segmentIndex: nearest.segmentIndex,
-      positionAtSegment: nearest.positionAtSegment,
-      coords: nearest.coords,
-      at: getAtFromSegment(nearest.edge, nearest.positionAtSegment, nearest.segmentIndex),
-    };
-    return position;
-  }
-}
-
-function createPoint(point: number[], vertex: ClientGraphVertex) {
-  return {
-    minX: point[0],
-    minY: point[1],
-    maxX: point[0],
-    maxY: point[1],
-    vertex,
-  };
-}
-
-function createPointBBox(point: number[], offset: number) {
-  return {
-    minX: point[0] - offset,
-    minY: point[1] - offset,
-    maxX: point[0] + offset,
-    maxY: point[1] + offset,
-  };
 }

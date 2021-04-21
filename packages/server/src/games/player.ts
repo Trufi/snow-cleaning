@@ -2,7 +2,7 @@ import { ClientMsg } from '@game/client/messages';
 import { ClientGraph, ClientGraphVertex } from '@game/data/clientGraph';
 import { Harvester } from '@game/utils/harvester';
 import { config } from '../config';
-import { random } from '../utils';
+import { getNextColorIndex, random } from '../utils';
 
 const harvesterDelay = 500;
 
@@ -32,10 +32,12 @@ export class Player {
     const enabledEdges = graph.edges.filter((edge) => edge.enabled);
     const edge = enabledEdges[Math.floor(random() * enabledEdges.length)];
 
-    this.harvester = new Harvester(graph, {
+    this.harvester = new Harvester({
       edge,
       at: 0.5,
       speed: config.harvesterSpeed,
+      color: getNextColorIndex(),
+      score: 0,
     });
   }
 

@@ -1,4 +1,5 @@
 import { createRandomFunction } from '@game/utils';
+import { config } from './config';
 
 /**
  * Запоминаем время старта сервера и считаем все от него,
@@ -11,3 +12,9 @@ const startTime = Date.now();
 export const time = () => (Date.now() - startTime) % 2147483647;
 
 export const random = createRandomFunction(2314125);
+
+let nextColorIndex = Math.floor(Math.random() * config.colors.length);
+export function getNextColorIndex() {
+  nextColorIndex = (nextColorIndex + 1) % config.colors.length;
+  return nextColorIndex;
+}

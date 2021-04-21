@@ -1,12 +1,12 @@
-import { Harvester as PlayerHarvester } from '@game/utils/harvester';
+import { Harvester } from '@game/utils/harvester';
 import { ClientGraphEdge } from '@game/data/clientGraph';
 import { RenderContext } from '../types';
 import { PointBatch, PointBatchEntity, PointIcon } from './pointBatch';
 import { LineBatch } from './lineBatch';
-import { Harvester } from '../game/harvester';
+import { InterpolatedHarvester } from '../game/interpolatedHarvester';
 
 interface RenderPoint {
-  harvester: Harvester | PlayerHarvester;
+  harvester: InterpolatedHarvester | Harvester;
   point: PointBatchEntity;
 }
 
@@ -59,7 +59,7 @@ export class Render {
     this.lineBatch = new LineBatch(this.renderContext);
   }
 
-  public setPoints(harversters: Array<Harvester | PlayerHarvester>, min: number[], max: number[]) {
+  public setPoints(harversters: Array<InterpolatedHarvester | Harvester>, min: number[], max: number[]) {
     this.points = harversters.map((harvester) => ({
       harvester,
       point: {
@@ -86,7 +86,7 @@ export class Render {
   public render() {
     for (let i = 0; i < this.points.length; i++) {
       const { point, harvester } = this.points[i];
-      const coords = harvester instanceof PlayerHarvester ? harvester.getCoords() : harvester.coords;
+      const coords = harvester.getCoords();
       point.position[0] = coords[0];
       point.position[1] = coords[1];
       point.icon = harvester.color;
