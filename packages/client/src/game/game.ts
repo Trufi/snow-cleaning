@@ -114,7 +114,7 @@ export class Game {
 
     const handleMouseEvent = (ev: MouseEvent) => {
       ev.preventDefault();
-      if (!this.isMouseDown) {
+      if (!ev.ctrlKey && !this.isMouseDown) {
         return;
       }
       this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([ev.clientX, ev.clientY]));
