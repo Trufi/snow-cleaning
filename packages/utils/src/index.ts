@@ -7,7 +7,7 @@ export function addStubDataToGraph(dataGraph: DataGraph) {
   graph.edges.forEach((edge) => {
     edge.userData = {
       enabled: false,
-      pollution: 1,
+      pollution: 0,
     };
   });
 }

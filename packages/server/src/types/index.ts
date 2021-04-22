@@ -1,4 +1,6 @@
 import { Bot } from '../games/bot';
+import { BlizzardEncounter } from '../games/encounters/blizzardEncounter';
+import { EmptyEncounter } from '../games/encounters/emptyEncounter';
 import { Player } from '../games/player';
 
 export interface InitialConnection {
@@ -28,29 +30,20 @@ export interface GameObserver {
   name: string;
 }
 
+export type Encounter = EmptyEncounter | BlizzardEncounter;
+
 export interface GameState {
   prevTime: number;
   time: number;
   players: Map<string, Player>;
   bots: Map<string, Bot>;
   startTime: number;
-  lastPolluteTime: number;
   lastPollutionClientUpdateTime: number;
-  duration: number;
   maxPlayers: number;
-  restart: {
-    need: boolean;
-    time: number;
-    duration: number;
-  };
+  encounter: Encounter;
 }
 
 export interface State {
   url: string;
   connections: ConnectionsState;
-}
-
-export interface RestartData {
-  inSeconds: number;
-  duration: number;
 }

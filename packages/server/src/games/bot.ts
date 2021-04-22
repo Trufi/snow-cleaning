@@ -1,9 +1,10 @@
 import { Harvester } from '@game/utils/harvester';
-import { SnowClientGraph, SnowClientGraphEdge } from '@game/utils/types';
-import { breadthFirstTraversalFromMidway } from '@trufi/roads';
+import { SnowClientGraphEdge } from '@game/utils/types';
+import { breadthFirstTraversalFromMidway, pathfindFromMidway, Roads } from '@trufi/roads';
 import { adjectives, animals, names, uniqueNamesGenerator } from 'unique-names-generator';
 import { config } from '../config';
-import { getNextColorIndex, random } from '../utils';
+import { Encounter } from '../types';
+import { getNextColorIndex, getPlayerStartEdge, random } from '../utils';
 
 let idCounter = 0;
 
@@ -24,9 +25,8 @@ export class Bot {
    */
   private liveTime = 20000 + random() * 10 * 60 * 1000;
 
-  constructor(graph: SnowClientGraph, private createTime: number) {
-    const enabledEdges = graph.edges.filter((edge) => edge.userData.enabled);
-    const edge = enabledEdges[Math.floor(random() * enabledEdges.length)];
+  constructor(private roads: Roads, private createTime: number) {
+    const edge = getPlayerStartEdge(roads.graph);
     this.harvester = new Harvester({
       edge,
       at: 0,
@@ -38,6 +38,20 @@ export class Bot {
 
   public timeIsPassed(now: number) {
     return now - this.createTime > this.liveTime;
+  }
+
+  public onEncounterStarted(encounter: Encounter) {
+    // Если это Blizzard, то сразу двигаемся в ее центр, а потом уже думаем
+    if (encounter.type === 'blizzard') {
+      const nearest = this.roads.findNearestVertex(encounter.center);
+      if (nearest) {
+        const position = this.harvester.getPosition();
+        const route = pathfindFromMidway(position, nearest);
+        if (route) {
+          this.harvester.setRoute(encounter.startTime, route);
+        }
+      }
+    }
   }
 
   public update(now: number) {

@@ -1,9 +1,9 @@
 import { ObjectElement } from '@game/utils';
-import { SnowClientGraph } from '@game/utils/types';
+import { SnowClientGraph, SnowClientGraphEdge } from '@game/utils/types';
 import { mapMap, round } from '@trufi/utils';
 import { Bot } from '../games/bot';
 import { Player } from '../games/player';
-import { GameState } from '../types';
+import { Encounter, GameState } from '../types';
 
 const connect = (id: string) => ({
   type: 'connect' as const,
@@ -34,19 +34,19 @@ const startData = (game: GameState, player: Player, graph: SnowClientGraph) => {
   return {
     type: 'startData' as const,
     playerId: player.id,
-    endTime: game.startTime + game.duration,
     players: playerData.concat(botData),
-    enabledEdges: graph.edges.filter((edge) => edge.userData.enabled).map((edge) => edge.index),
-  };
-};
-
-const restartData = (game: GameState) => {
-  const players = mapMap(game.players, getPlayerData);
-
-  return {
-    type: 'restartData' as 'restartData',
-    endTime: game.startTime + game.duration,
-    players,
+    edges: graph.edges
+      .filter(({ userData: {pollution} }) => round(pollution, 1) > 0)
+      .map(({ index, userData: {pollution, enabled} }) => ({
+        index,
+        pollution: round(pollution, 1),
+        enabled,
+      })),
+    encounter: {
+      type: game.encounter.type,
+      startTime: game.encounter.startTime,
+      duration: game.encounter.duration,
+    },
   };
 };
 
@@ -81,18 +81,22 @@ const tickData = (game: GameState) => {
   };
 };
 
-const pollutionData = (graph: SnowClientGraph) => {
+const previoslySentEdges = new WeakMap<SnowClientGraphEdge, number>();
+const pollutionData = (graph: SnowClientGraph, encounter: Encounter) => {
   const changedEdges: { [index: string]: number } = {};
   graph.edges.forEach((edge, index) => {
     const pollution = round(edge.userData.pollution, 1);
-    if (pollution !== 1) {
+    const prevPollution = previoslySentEdges.get(edge);
+    if (pollution !== prevPollution) {
       changedEdges[index] = pollution;
+      previoslySentEdges.set(edge, pollution);
     }
   });
 
   return {
     type: 'pollution' as const,
     changedEdges,
+    encounterReadyPercent: encounter.getReadyPercent(),
   };
 };
 
@@ -102,9 +106,18 @@ const pong = (serverTime: number, clientTime: number) => ({
   clientTime,
 });
 
-const restartAt = (game: GameState) => ({
-  type: 'restartAt' as 'restartAt',
-  time: game.restart.time,
+const encounterStarted = (graph: SnowClientGraph, encounter: Encounter) => ({
+  type: 'encounterStarted' as const,
+  enabledEdges: graph.edges.filter((edge) => edge.userData.enabled).map((edge) => edge.index),
+  encounter: {
+    type: encounter.type,
+    startTime: encounter.startTime,
+    duration: encounter.duration,
+  },
+});
+
+const encounterFinished = () => ({
+  type: 'encounterFinished' as const,
 });
 
 export const msg = {
@@ -116,8 +129,8 @@ export const msg = {
   tickData,
   pollutionData,
   pong,
-  restartAt,
-  restartData,
+  encounterStarted,
+  encounterFinished,
 };
 
 export const pbfMsg = {

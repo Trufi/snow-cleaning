@@ -26,10 +26,6 @@ export class Core {
     this.game = new Game(
       {
         currentTime: time(),
-
-        // TODO: сделать бесконечной, когда уйдет ограничение на time
-        duration: 2 ** 32,
-
         maxPlayers: 200,
       },
       this.executeCmd,

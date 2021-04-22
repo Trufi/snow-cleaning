@@ -42,7 +42,7 @@ export function App(props: AppProps) {
 
       return (
         <div className={style.root}>
-          <Debug serverTime={serverTime} />
+          <Debug serverTime={serverTime} state={state} />
           <Rating state={state} />
           <BigScore state={state} />
         </div>

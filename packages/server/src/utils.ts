@@ -1,3 +1,4 @@
+import { SnowClientGraph } from '@game/utils/types';
 import { createRandomFunction } from '@trufi/utils';
 import { config } from './config';
 
@@ -17,4 +18,14 @@ let nextColorIndex = Math.floor(Math.random() * config.colors.length);
 export function getNextColorIndex() {
   nextColorIndex = (nextColorIndex + 1) % config.colors.length;
   return nextColorIndex;
+}
+
+export function getPlayerStartEdge(graph: SnowClientGraph) {
+  const enabledEdges = graph.edges.filter((edge) => edge.userData.enabled);
+  const randomEnabledEdge = enabledEdges[Math.floor(Math.random() * enabledEdges.length)];
+  if (randomEnabledEdge) {
+    return randomEnabledEdge;
+  }
+
+  return graph.edges[Math.floor(random() * graph.edges.length)];
 }

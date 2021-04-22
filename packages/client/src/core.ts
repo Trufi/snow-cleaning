@@ -100,6 +100,17 @@ class InGameState {
 
       case 'pong': {
         this.game.updatePingAndServerTime(serverMsg);
+        break;
+      }
+
+      case 'encounterStarted': {
+        this.game.encounterStarted(serverMsg);
+        break;
+      }
+
+      case 'encounterFinished': {
+        this.game.encounterFinished(serverMsg);
+        break;
       }
     }
   };

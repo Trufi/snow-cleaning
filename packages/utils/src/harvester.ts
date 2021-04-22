@@ -88,6 +88,7 @@ export class Harvester {
       const nextPollution = clamp(edgeData.pollution - dx, 0, 1);
       this.score += ((edgeData.pollution - nextPollution) * edge.length) / 1000;
       edgeData.pollution = nextPollution;
+      
     }
   };
 }

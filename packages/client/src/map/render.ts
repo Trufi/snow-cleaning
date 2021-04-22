@@ -79,8 +79,8 @@ export class Render {
     this.lineBatch.setLines(roadEdges, min, max);
   }
 
-  public updateLines(roadEdges: ClientGraphEdge[]) {
-    this.lineBatch.updateColors(roadEdges);
+  public updateLines() {
+    this.lineBatch.updateColors();
   }
 
   public render() {

@@ -3,7 +3,7 @@ import { Harvester } from '@game/utils/harvester';
 import { SnowClientGraph } from '@game/utils/types';
 import { Route } from '@trufi/roads';
 import { config } from '../config';
-import { getNextColorIndex, random } from '../utils';
+import { getNextColorIndex, getPlayerStartEdge } from '../utils';
 
 const harvesterDelay = 500;
 
@@ -28,8 +28,7 @@ export class Player {
 
     private graph: SnowClientGraph,
   ) {
-    const enabledEdges = graph.edges.filter((edge) => edge.userData.enabled);
-    const edge = enabledEdges[Math.floor(random() * enabledEdges.length)];
+    const edge = getPlayerStartEdge(graph);
 
     this.harvester = new Harvester({
       edge,

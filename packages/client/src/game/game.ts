@@ -31,6 +31,13 @@ export interface CurrentGamePlayer {
   harvester: Harvester;
 }
 
+export interface Encounter {
+  type: 'empty' | 'blizzard';
+  readyPercent: number;
+  startTime: number;
+  duration: number;
+}
+
 export interface GameState {
   prevTime: number;
   time: number;
@@ -40,6 +47,8 @@ export interface GameState {
 
   players: Map<string, GamePlayer>;
   currentPlayer: CurrentGamePlayer;
+
+  encounter: Encounter;
 }
 
 export class Game {
@@ -64,10 +73,12 @@ export class Game {
     this.graph = this.roads.graph;
     this.serverTime = new ServerTime(time);
 
-    startData.enabledEdges.forEach((edgeIndex) => {
-      this.graph.edges[edgeIndex].userData.enabled = true;
+    startData.edges.forEach((edge) => {
+      const clientEdge = this.graph.edges[edge.index];
+      clientEdge.userData.pollution = edge.pollution;
+      clientEdge.userData.enabled = edge.enabled;
     });
-
+    
     const players: GameState['players'] = new Map();
     startData.players.forEach((player) => {
       if (player.id !== startData.playerId) {
@@ -112,6 +123,12 @@ export class Game {
 
       lastGoToPoint: undefined,
       lastGoToPointUpdateTime: time,
+
+      encounter: {
+        ...startData.encounter,
+        startTime: startData.encounter.startTime + this.serverTime.getDiff(),
+        readyPercent: 0,
+      },
     };
 
     this.updatePointsSize();
@@ -122,6 +139,8 @@ export class Game {
     this.mouseZoom = new MouseZoom(this.render.map, handlerContainer);
     this.mousePitchRotate = new MousePitchRotate(this.render.map, handlerContainer);
     this.touchZoomRotate = new TouchZoomRotate(this.render.map, handlerContainer);
+
+    drawMarker(this.render.map, [990885430.398866, 789368620.959134]);
 
     const handleMouseEvent = (ev: MouseEvent) => {
       ev.preventDefault();
@@ -240,8 +259,28 @@ export class Game {
       this.graph.edges[index].userData.pollution = data.changedEdges[key];
     }
 
-    this.render.updateLines(this.graph.edges);
+    this.state.encounter.readyPercent = data.encounterReadyPercent;
+
+    this.render.updateLines();
   }
+
+  public encounterStarted(data: ServerMsg['encounterStarted']) {
+    this.state.encounter = {
+      ...data.encounter,
+      startTime: data.encounter.startTime + this.serverTime.getDiff(),
+      readyPercent: 0,
+    };
+
+    const { edges, min, max } = this.graph;
+
+    data.enabledEdges.forEach((edgeIndex) => {
+      edges[edgeIndex].userData.enabled = true;
+    });
+
+    this.render.setLines(edges, min, max);
+  }
+
+  public encounterFinished(_data: ServerMsg['encounterFinished']) {}
 
   public update(): Cmd {
     const time = getTime();

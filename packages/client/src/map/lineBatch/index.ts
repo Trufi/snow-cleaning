@@ -4,22 +4,29 @@ import Shader from '2gl/Shader';
 import ShaderProgram from '2gl/ShaderProgram';
 import Vao from '2gl/Vao';
 import { ClientGraphEdge } from '@trufi/roads';
-import { mat4create, mat4fromTranslationScale, mat4mul, vec3copy, vec3lerp } from '@trufi/utils';
+import { mat4create, mat4fromTranslationScale, mat4mul, vec4copy } from '@trufi/utils';
 import { RenderContext } from '../../types';
 import { createEmptyGeneratorData, generate, GeneratorEdgeData, lineStride } from './generator';
+import { Sample, sampleColor } from './sample';
 import fragmentShaderSource from './shader.fsh';
 import vertexShaderSource from './shader.vsh';
 import { hslToRgb } from './utils';
 
 const tempMatrix = new Float32Array(16);
 
-const minColor = [0, 0.5, 0.5];
-const maxColor = [120 / 360, 0.5, 0.5];
+const colors: Sample = [
+  [0.05, [50 / 360, 0.5, 0.5, 1]],
+  [0.3, [50 / 360, 0.5, 0.5, 255]],
+  [1, [0 / 360, 0.5, 0.5, 255]],
+];
 
 function getColor(pollution: number) {
-  const hsl = [0, 0, 0];
-  vec3lerp(hsl, minColor, maxColor, 1 - pollution);
-  return hslToRgb(hsl[0], hsl[1], hsl[2]);
+  if (pollution < 0.05) {
+    return [0, 0, 0, 0];
+  }
+  const hsl = sampleColor(colors, pollution);
+  const rgb = hslToRgb(hsl[0], hsl[1], hsl[2]);
+  return [rgb[0], rgb[1], rgb[2], 255];
 }
 
 function createRoadVao(buffer: Buffer, program: ShaderProgram) {
@@ -85,6 +92,11 @@ export class LineBatch {
     mat4fromTranslationScale(this.matrix, [min[0], min[1], 0], [size[0], size[1], 1]);
 
     for (const edge of roadEdges) {
+      // Будем рисовать звенья: участвующие в энкаунтере или те, что не пусты
+      if (!edge.userData.enabled && edge.userData.pollution === 0) {
+        continue;
+      }
+
       const edgeData: GeneratorEdgeData = {
         px: [],
         py: [],
@@ -92,9 +104,6 @@ export class LineBatch {
         edge,
       };
       this.generatorData.edges.push(edgeData);
-      if (!edge.userData.enabled) {
-        continue;
-      }
 
       const color = getColor(edgeData.edge.userData.pollution);
 
@@ -127,22 +136,15 @@ export class LineBatch {
     this.vao = createRoadVao(this.elementBuffer, this.program);
   }
 
-  public updateColors(roadEdges: ClientGraphEdge[]) {
+  public updateColors() {
     if (!this.elementBuffer) {
       return;
     }
 
-    for (let i = 0; i < roadEdges.length; i++) {
-      const edge = roadEdges[i];
-      if (!edge.userData.enabled) {
-        continue;
-      }
-
-      const edgeData = this.generatorData.edges[i];
-      const color = getColor(edge.userData.pollution);
-
-      for (let j = 0; j < edge.geometry.length; j++) {
-        vec3copy(edgeData.colors[j], color);
+    for (const edgeData of this.generatorData.edges) {
+      const color = getColor(edgeData.edge.userData.pollution);
+      for (let j = 0; j < edgeData.edge.geometry.length; j++) {
+        vec4copy(edgeData.colors[j], color);
       }
     }
 
