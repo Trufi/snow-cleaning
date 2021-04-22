@@ -49,6 +49,7 @@ export class Game {
   private touchZoomRotate: TouchZoomRotate;
   private serverTime: ServerTime;
   private vertexFinder: VertexFinder;
+  private isMouseDown = false;
 
   constructor(
     private graph: ClientGraph,
@@ -112,6 +113,10 @@ export class Game {
     this.touchZoomRotate = new TouchZoomRotate(this.render.map, handlerContainer);
 
     const handleMouseEvent = (ev: MouseEvent) => {
+      ev.preventDefault();
+      if (!this.isMouseDown) {
+        return;
+      }
       this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([ev.clientX, ev.clientY]));
       const toPosition = this.vertexFinder.findNearest(this.state.lastGoToPoint);
       if (toPosition) {
@@ -119,6 +124,16 @@ export class Game {
       }
     };
     handlerContainer.addEventListener('mousemove', handleMouseEvent);
+    handlerContainer.addEventListener('mousedown', () => (this.isMouseDown = true));
+    handlerContainer.addEventListener('mouseup', () => (this.isMouseDown = false));
+    handlerContainer.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([ev.clientX, ev.clientY]));
+      const toPosition = this.vertexFinder.findNearest(this.state.lastGoToPoint);
+      if (toPosition) {
+        drawMarker(this.render.map, toPosition.coords);
+      }
+    });
 
     handlerContainer.addEventListener('touchmove', (ev) => {
       if (ev.touches.length !== 1) {
