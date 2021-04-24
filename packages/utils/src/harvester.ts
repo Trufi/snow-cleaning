@@ -148,4 +148,13 @@ export class Harvester {
       }
     }
   }
+
+  public getDebugInfo() {
+    return {
+      score: this.score,
+      speed: this.speed,
+      at: this.position.at,
+      edge: this.position.edge.index,
+    };
+  }
 }

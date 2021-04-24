@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as path from 'path';
 import * as cors from 'cors';
 import { config } from './config';
-import { applyRoutes } from './routes';
+import { applyApiRoutes } from './api';
 import { Core } from './core';
 
 const app = express();
@@ -21,4 +21,4 @@ url = url.replace('https://', '');
 
 const core = new Core(server, url);
 
-applyRoutes(app, core);
+applyApiRoutes(app, core);

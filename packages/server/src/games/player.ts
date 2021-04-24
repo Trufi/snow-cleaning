@@ -125,6 +125,14 @@ export class Player {
 
     this.harvester.setRoute(newRoute.time, newRoute.fromAt, newRoute.vertices, newRoute.toAt);
   }
+
+  public getDebugInfo() {
+    return {
+      id: this.id,
+      name: this.name,
+      harvester: this.harvester.getDebugInfo(),
+    };
+  }
 }
 
 interface TEdge {

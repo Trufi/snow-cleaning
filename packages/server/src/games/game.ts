@@ -1,5 +1,5 @@
 import { ClientGraph, prepareGraph } from '@game/data/clientGraph';
-import { clamp, mapMap, mapToArray } from '@game/utils';
+import { clamp, mapMap } from '@game/utils';
 import { ClientMsg } from '@game/client/messages';
 import { vec2dist } from '@game/utils/vec2';
 import { projectGeoToMap } from '@game/utils/geo';
@@ -148,10 +148,12 @@ export class Game {
   }
 
   public getDebugInfo() {
-    const { players } = this.state;
+    const { players, bots } = this.state;
     return {
       ...this.state,
-      players: mapToArray(players),
+      players: mapMap(players, (player) => player.getDebugInfo()),
+      bots: mapMap(bots, (bot) => bot.getDebugInfo()),
+      edges: this.graph.edges.map(({ index, pollution }) => ({ index, pollution })),
     };
   }
 }

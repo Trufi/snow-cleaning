@@ -52,6 +52,14 @@ export class Bot {
 
     this.harvester.updateMoving(now);
   }
+
+  public getDebugInfo() {
+    return {
+      id: this.id,
+      name: this.name,
+      harvester: this.harvester.getDebugInfo(),
+    };
+  }
 }
 
 function findBestRoute(edge: ClientGraphEdge) {
