@@ -7,9 +7,9 @@
     "start": "npm run prod --prefix packages/server"
   },
   "devDependencies": {
-    "prettier": "^2.2.1"
+    "prettier": "^2.7.1"
   },
   "dependencies": {
-    "tslib": "^2.2.0"
+    "tslib": "^2.4.0"
   }
 }

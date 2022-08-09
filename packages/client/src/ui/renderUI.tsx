@@ -1,11 +1,12 @@
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { App, AppProps } from './components/app';
 import './index.css';
 
 const rootUI = document.getElementById('ui');
+const root = createRoot(rootUI!);
 
 export function renderUI(appProps: AppProps) {
-  render(<App {...appProps} />, rootUI);
+  root.render(<App {...appProps} />);
 }
 
 export type RenderUIFunction = typeof renderUI;

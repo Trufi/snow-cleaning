@@ -1,5 +1,4 @@
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
 const path = require('path');
 
@@ -65,26 +64,20 @@ module.exports = (env) => {
     output: {
       filename: 'index.js',
       path: path.resolve(__dirname, 'dist'),
+      publicPath: '/dist',
     },
 
-    plugins: [
-      new Dotenv({ path: path.resolve(__dirname, '../../.env') }),
-      new ForkTsCheckerWebpackPlugin(),
-      new HtmlWebpackPlugin({
-        template: 'index.html',
-      }),
-    ],
+    plugins: [new Dotenv({ path: path.resolve(__dirname, '../../.env') }), new ForkTsCheckerWebpackPlugin()],
 
     devtool: mode === 'production' ? false : 'source-map',
 
     devServer: {
       host: '0.0.0.0',
       port: 3000,
-      stats: {
-        modules: false,
+      allowedHosts: 'all',
+      client: {
+        overlay: false,
       },
-      disableHostCheck: true,
-      contentBase: path.resolve(__dirname, 'dist'),
     },
   };
 };

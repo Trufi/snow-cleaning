@@ -107,8 +107,8 @@ export class Transport {
     this.props.onNewConnection(id);
   };
 
-  private onMessage = (connection: Connection) => (data: ws.Data) => {
-    const msg = unpackMessage(data, connection.id);
+  private onMessage = (connection: Connection) => (data: ws.Data, isBinary: boolean) => {
+    const msg = unpackMessage(data, isBinary, connection.id);
     if (!msg) {
       return;
     }

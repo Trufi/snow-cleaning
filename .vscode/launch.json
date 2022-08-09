@@ -8,9 +8,9 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only", "-r", "tsconfig-paths/register"],
 
-      "args": ["src\\index.ts", "--example", "hello"],
+      "args": ["src/index.ts", "--example", "hello"],
 
-      "cwd": "${workspaceRoot}\\packages\\newData",
+      "cwd": "${workspaceRoot}/packages/newData",
       "internalConsoleOptions": "openOnSessionStart",
       "skipFiles": ["<node_internals>/**", "node_modules/**"]
     },
@@ -21,9 +21,9 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only", "-r", "tsconfig-paths/register"],
 
-      "args": ["src\\index.ts", "--example", "hello"],
+      "args": ["src/index.ts", "--example", "hello"],
 
-      "cwd": "${workspaceRoot}\\packages\\server",
+      "cwd": "${workspaceRoot}/packages/server",
       "internalConsoleOptions": "openOnSessionStart",
       "skipFiles": ["<node_internals>/**", "node_modules/**"]
     }

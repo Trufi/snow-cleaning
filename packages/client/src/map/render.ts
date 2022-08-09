@@ -94,7 +94,7 @@ export class Render {
 
     const { gl } = this.renderContext;
     gl.clear(gl.COLOR_BUFFER_BIT);
-    const cameraMatrix = (this.map as any)._impl.modules.renderer.vpMatrix;
+    const cameraMatrix = this.map.getProjectionMatrix();
     this.lineBatch.render(cameraMatrix, this.map.getSize(), this.map.getZoom());
     this.pointBatch.render(cameraMatrix, this.map.getSize(), this.map.getZoom());
   }
