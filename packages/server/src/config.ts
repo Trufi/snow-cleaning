@@ -2,6 +2,7 @@ export const config = {
   url: process.env.GAME_SERVER_URL || 'localhost',
   port: process.env.GAME_SERVER_PORT || 3001,
 
+  publicServerPort: process.env.PUBLIC_SERVER_PORT || 3001,
   publicWebSocketURL: process.env.PUBLIC_WS_URL || 'ws://localhost:3001',
 
   clientsCheckInterval: 30000,

@@ -37,7 +37,7 @@ const render = new Render(map, icons);
 
 new Snow(map as any, { skipWaitingForMapIdle: true });
 
-fetch(`${location.protocol}//${location.hostname}:${config.port}/assets/novosibirsk.json`)
+fetch(`${location.protocol}//${location.hostname}/assets/novosibirsk.json`)
   .then((res) => res.json())
   .then((dataGraph: DataGraph) => {
     addStubDataToGraph(dataGraph);
