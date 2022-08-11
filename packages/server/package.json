@@ -12,7 +12,7 @@
     "start": "npm run dev",
     "build": "npm run build:server && npm run build:copydata && npm run build:copyclientjs",
     "build:server": "tsc -p tsconfig.json",
-    "build:copydata": "copyfiles -f ../newdata/assets/*.json dist/newdata/assets",
+    "build:copydata": "copyfiles -f ./src/assets/*.json dist/server/src/assets",
     "build:copyclientjs": "copyfiles -f ../client/dist/* dist/client/dist",
     "prod": "node -r dotenv/config -r module-alias/register dist/server/src/index.js dotenv_config_path=\"../../.env\"",
     "dev": "nodemon"
