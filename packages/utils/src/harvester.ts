@@ -85,7 +85,7 @@ export class Harvester {
       const dx = edge.length ? passedDistance / edge.length : 1;
 
       // Обновляем загрязнение дороги и начисляем очки
-      const nextPollution = clamp(edgeData.pollution - edgeData.pollution * dx, 0, 1);
+      const nextPollution = clamp(edgeData.pollution - dx, 0, 1);
       this.score += ((edgeData.pollution - nextPollution) * edge.length) / 1000;
       edgeData.pollution = nextPollution;
     }

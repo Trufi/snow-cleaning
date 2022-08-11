@@ -15,6 +15,8 @@ import { getTime } from '../utils';
 import { InterpolatedHarvester, InterpolatedHarvesterInitialData } from './interpolatedHarvester';
 import { ServerTime } from './serverTime';
 
+const vertexSearchingMinDistance = 131072;
+
 export interface GamePlayer {
   id: string;
   name: string;
@@ -127,7 +129,7 @@ export class Game {
         return;
       }
       this.state.lastGoToPoint = mapPointFromLngLat(this.render.map.unproject([ev.clientX, ev.clientY]));
-      const toPosition = this.roads.findNearestVertex(this.state.lastGoToPoint);
+      const toPosition = this.roads.findNearestVertex(this.state.lastGoToPoint, vertexSearchingMinDistance);
       if (toPosition) {
         drawMarker(this.render.map, toPosition.coords);
       }
@@ -138,7 +140,7 @@ export class Game {
     handlerContainer.addEventListener('click', (ev) => {
       ev.preventDefault();
       this.state.lastGoToPoint = mapPointFromLngLat(this.render.map.unproject([ev.clientX, ev.clientY]));
-      const toPosition = this.roads.findNearestVertex(this.state.lastGoToPoint);
+      const toPosition = this.roads.findNearestVertex(this.state.lastGoToPoint, vertexSearchingMinDistance);
       if (toPosition) {
         drawMarker(this.render.map, toPosition.coords);
       }
@@ -275,7 +277,7 @@ export class Game {
     if (!this.state.lastGoToPoint) {
       return;
     }
-    const toPosition = this.roads.findNearestVertex(this.state.lastGoToPoint);
+    const toPosition = this.roads.findNearestVertex(this.state.lastGoToPoint, vertexSearchingMinDistance);
     this.state.lastGoToPoint = undefined;
     if (!toPosition) {
       return;

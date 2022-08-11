@@ -1,8 +1,8 @@
-import * as cors from 'cors';
-import * as express from 'express';
-import * as path from 'path';
-import { applyApiRoutes } from './api';
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
 import { config } from './config';
+import { applyApiRoutes } from './api';
 import { Core } from './core';
 
 const app = express();

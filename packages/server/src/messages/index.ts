@@ -6,12 +6,12 @@ import { Player } from '../games/player';
 import { GameState } from '../types';
 
 const connect = (id: string) => ({
-  type: 'connect' as 'connect',
+  type: 'connect' as const,
   id,
 });
 
 const gameJoinFail = () => ({
-  type: 'gameJoinFail' as 'gameJoinFail',
+  type: 'gameJoinFail' as const,
 });
 
 const getPlayerData = (player: Bot | Player) => ({

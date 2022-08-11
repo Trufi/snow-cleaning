@@ -1,6 +1,6 @@
 import { Server } from 'http';
-import * as ws from 'ws';
-import * as hyperid from 'hyperid';
+import ws from 'ws';
+import hyperid from 'hyperid';
 import { unpackMessage } from './messages/unpack';
 import { config } from './config';
 
