@@ -2,26 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "new data debug",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only", "-r", "tsconfig-paths/register"],
-
-      "args": ["src/index.ts", "--example", "hello"],
-
-      "cwd": "${workspaceRoot}/packages/newData",
-      "internalConsoleOptions": "openOnSessionStart",
-      "skipFiles": ["<node_internals>/**", "node_modules/**"]
-    },
-    {
       "name": "server debug",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "node",
       "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only", "-r", "tsconfig-paths/register"],
 
-      "args": ["src/index.ts", "--example", "hello"],
+      "args": ["src/index.ts"],
 
       "cwd": "${workspaceRoot}/packages/server",
       "internalConsoleOptions": "openOnSessionStart",

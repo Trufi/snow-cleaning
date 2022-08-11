@@ -1,7 +1,7 @@
 import { ClientMsg } from '@game/client/messages';
 import { Harvester } from '@game/utils/harvester';
 import { SnowClientGraph } from '@game/utils/types';
-import { ClientGraphVertex, Route } from '@trufi/roads';
+import { Route } from '@trufi/roads';
 import { config } from '../config';
 import { getNextColorIndex, random } from '../utils';
 
@@ -66,11 +66,11 @@ export class Player {
         const nextRoute = this.futureRoutes[0];
         if (
           nextRoute.route.fromAt !== harvesterRoute.toAt ||
-          !sameTEdges(nextRoute.route.edges[0].edge, harvesterRoute.edges[harvesterRoute.edges.length - 1].edge)
+          nextRoute.route.edges[0].edge !== harvesterRoute.edges[harvesterRoute.edges.length - 1].edge
         ) {
           // Если мы еще движемся не к нему, то изменим текущий путь
-          const sameTEdgeIndex = findSameTEdgeInRoute(nextRoute.route.edges[0].edge, harvesterRoute);
-          if (sameTEdgeIndex === -1) {
+          const sameEdgeIndex = harvesterRoute.edges.findIndex(({ edge }) => edge === nextRoute.route.edges[0].edge);
+          if (sameEdgeIndex === -1) {
             console.log(
               `Не найдена совпадающая грань текущего пути [${harvesterRoute.edges
                 .map(({ edge }) => edge.index)
@@ -82,7 +82,7 @@ export class Player {
 
           // TODO: решить что делать с edgeIndexInRoute
           const edgeIndexInRoute = (this.harvester.point as any).edgeIndexInRoute;
-          if (edgeIndexInRoute > sameTEdgeIndex) {
+          if (edgeIndexInRoute > sameEdgeIndex) {
             console.log(
               `Совпадающая грань текущего пути [${harvesterRoute.edges
                 .map(({ edge }) => edge.index)
@@ -91,7 +91,7 @@ export class Player {
                 .join(',')}] была уже пройдена у игрока ${this.id}, edgeIndexInRoute = ${edgeIndexInRoute} `,
             );
           }
-          harvesterRoute.edges.slice(0, sameTEdgeIndex + 1); // TODO: возможно +0
+          harvesterRoute.edges.slice(0, sameEdgeIndex + 1); // TODO: возможно +0
           harvesterRoute.toAt = nextRoute.route.fromAt;
         }
       }
@@ -111,17 +111,17 @@ export class Player {
 
     // Если есть еще и будущий путь, то подправляем новый сразу с концом - началом будущего
     if (futureRoute) {
-      const sameTEdgeIndex = findSameTEdgeInRoute(futureRoute.route.edges[0].edge, newRoute.route);
-      if (sameTEdgeIndex === -1) {
+      const sameEdgeIndex = newRoute.route.edges.findIndex(({ edge }) => edge === futureRoute.route.edges[0].edge);
+      if (sameEdgeIndex === -1) {
         console.log(
           `Не найдена совпадающая грань нового пути [${newRoute.route.edges
             .map(({ edge }) => edge.index)
-            .join(',')}] и будушего [${futureRoute.route.edges.map(({ edge }) => edge.index).join(',')}] у игрока ${
+            .join(',')}] и будущего [${futureRoute.route.edges.map(({ edge }) => edge.index).join(',')}] у игрока ${
             this.id
           }`,
         );
       }
-      harvesterRoute.edges.slice(0, sameTEdgeIndex + 1); // TODO: возможно +0
+      harvesterRoute.edges.slice(0, sameEdgeIndex + 1); // TODO: возможно +0
       harvesterRoute.toAt = futureRoute.route.fromAt;
     }
 
@@ -137,24 +137,6 @@ export class Player {
       harvester: this.harvester.getDebugInfo(),
     };
   }
-}
-
-interface TEdge {
-  a: ClientGraphVertex;
-  b: ClientGraphVertex;
-}
-
-function sameTEdges(edgeA: TEdge, edgeB: TEdge) {
-  return (edgeA.a === edgeB.a && edgeA.b === edgeB.b) || (edgeA.b === edgeB.a && edgeA.a === edgeB.b);
-}
-
-function findSameTEdgeInRoute(edge: TEdge, route: Route) {
-  for (let i = 0; i < route.edges.length - 1; i++) {
-    if (sameTEdges(edge, route.edges[i].edge)) {
-      return i;
-    }
-  }
-  return -1;
 }
 
 function findStepInterval(time: number, steps: Array<{ time: number }>): number {
