@@ -1,16 +1,16 @@
-import { ClientGraphVertex } from '@game/data/clientGraph';
 import { ObjectElement } from '@game/utils';
+import { Route } from '@trufi/roads';
 
 const joinGame = (name: string) => ({
   type: 'joinGame' as const,
   name,
 });
 
-const newRoute = (serverTime: number, fromAt: number, vertices: ClientGraphVertex[], toAt: number) => ({
+const newRoute = (serverTime: number, route: Route) => ({
   type: 'newRoute' as const,
-  vertexIndices: vertices.map((vertex) => vertex.index),
-  fromAt,
-  toAt,
+  edges: route.edges.map(({ edge: { index }, forward }) => ({ index, forward })),
+  fromAt: route.fromAt,
+  toAt: route.toAt,
   time: serverTime,
 });
 

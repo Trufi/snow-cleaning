@@ -1,6 +1,6 @@
-import { ServerMsg } from '@game/server/messages';
 import { config } from '@game/server/config';
-import { clamp, lerp } from '@game/utils';
+import { ServerMsg } from '@game/server/messages';
+import { clamp, lerp } from '@trufi/utils';
 import { cmd, Cmd } from '../commands';
 import { msg } from '../messages';
 

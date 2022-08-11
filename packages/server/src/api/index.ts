@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as Joi from 'joi';
-import { mapMap } from '@game/utils';
+import { mapMap } from '@trufi/utils';
 import { KickAllRequest, StateRequest } from './types';
 import { Core } from '../core';
 
@@ -15,7 +15,7 @@ export const applyApiRoutes = (app: express.Express, core: Core) => {
   });
 
   app.get('/state', (req, res) => {
-    const query = (req.query as unknown) as StateRequest;
+    const query = req.query as unknown as StateRequest;
 
     const { error } = stateScheme.validate(query);
     if (error) {
@@ -38,7 +38,7 @@ export const applyApiRoutes = (app: express.Express, core: Core) => {
   });
 
   app.get('/kickall', (req, res) => {
-    const query = (req.query as unknown) as KickAllRequest;
+    const query = req.query as unknown as KickAllRequest;
 
     const { error } = kickallScheme.validate(query);
     if (error) {

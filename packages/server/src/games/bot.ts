@@ -1,10 +1,9 @@
-import { uniqueNamesGenerator, adjectives, animals, names } from 'unique-names-generator';
-import { ClientGraph, ClientGraphEdge } from '@game/data/clientGraph';
-import { findEdgeFromVertexToVertex } from '@game/utils/graph';
-import { breadthFirstTraversal } from '@game/utils/pathfind';
 import { Harvester } from '@game/utils/harvester';
-import { getNextColorIndex, random } from '../utils';
+import { SnowClientGraph, SnowClientGraphEdge } from '@game/utils/types';
+import { breadthFirstTraversalFromMidway } from '@trufi/roads';
+import { adjectives, animals, names, uniqueNamesGenerator } from 'unique-names-generator';
 import { config } from '../config';
+import { getNextColorIndex, random } from '../utils';
 
 let idCounter = 0;
 
@@ -25,8 +24,8 @@ export class Bot {
    */
   private liveTime = 20000 + random() * 10 * 60 * 1000;
 
-  constructor(graph: ClientGraph, private createTime: number) {
-    const enabledEdges = graph.edges.filter((edge) => edge.enabled);
+  constructor(graph: SnowClientGraph, private createTime: number) {
+    const enabledEdges = graph.edges.filter((edge) => edge.userData.enabled);
     const edge = enabledEdges[Math.floor(random() * enabledEdges.length)];
     this.harvester = new Harvester({
       edge,
@@ -43,10 +42,17 @@ export class Bot {
 
   public update(now: number) {
     if (this.harvester.isFinishedRoute()) {
-      const position = this.harvester.getPosition();
-      const route = findBestRoute(position.edge);
+      const route = breadthFirstTraversalFromMidway(
+        this.harvester.getPosition(),
+        (routeLength, _next, _current, edge: SnowClientGraphEdge) => {
+          if (routeLength > 5 || edge.userData.enabled === false) {
+            return;
+          }
+          return edge.length * (edge.userData.pollution + Math.random() * 0.5) - edge.length / 10;
+        },
+      );
       if (route) {
-        this.harvester.setRoute(now, position.at, route.route, route.toAt);
+        this.harvester.setRoute(now, route);
       }
     }
 
@@ -60,27 +66,4 @@ export class Bot {
       harvester: this.harvester.getDebugInfo(),
     };
   }
-}
-
-function findBestRoute(edge: ClientGraphEdge) {
-  const route = breadthFirstTraversal(edge.a, (_pollution, routeLength) => {
-    if (routeLength > 5) {
-      return false;
-    }
-
-    return true;
-  });
-
-  if (!route) {
-    return;
-  }
-
-  if (route[1] !== edge.b) {
-    route.unshift(edge.b);
-  }
-
-  const lastEdge = findEdgeFromVertexToVertex(route[route.length - 2], route[route.length - 1]);
-  const toAt = lastEdge?.forward ? 1 : 0;
-
-  return { route, toAt };
 }

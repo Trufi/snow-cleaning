@@ -1,5 +1,6 @@
-import { ClientGraph } from '@game/data/clientGraph';
-import { ObjectElement, mapMap, round } from '@game/utils';
+import { ObjectElement } from '@game/utils';
+import { SnowClientGraph } from '@game/utils/types';
+import { mapMap, round } from '@trufi/utils';
 import { Bot } from '../games/bot';
 import { Player } from '../games/player';
 import { GameState } from '../types';
@@ -26,7 +27,7 @@ const getPlayerData = (player: Bot | Player) => ({
 });
 export type PlayerData = ReturnType<typeof getPlayerData>;
 
-const startData = (game: GameState, player: Player, graph: ClientGraph) => {
+const startData = (game: GameState, player: Player, graph: SnowClientGraph) => {
   const playerData = mapMap(game.players, getPlayerData);
   const botData = mapMap(game.bots, getPlayerData);
 
@@ -35,7 +36,7 @@ const startData = (game: GameState, player: Player, graph: ClientGraph) => {
     playerId: player.id,
     endTime: game.startTime + game.duration,
     players: playerData.concat(botData),
-    enabledEdges: graph.edges.filter((edge) => edge.enabled).map((edge) => edge.index),
+    enabledEdges: graph.edges.filter((edge) => edge.userData.enabled).map((edge) => edge.index),
   };
 };
 
@@ -80,10 +81,10 @@ const tickData = (game: GameState) => {
   };
 };
 
-const pollutionData = (graph: ClientGraph) => {
+const pollutionData = (graph: SnowClientGraph) => {
   const changedEdges: { [index: string]: number } = {};
   graph.edges.forEach((edge, index) => {
-    const pollution = round(edge.pollution, 1);
+    const pollution = round(edge.userData.pollution, 1);
     if (pollution !== 1) {
       changedEdges[index] = pollution;
     }

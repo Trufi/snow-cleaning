@@ -1,21 +1,9 @@
-import { ClientGraphEdge, ClientGraphVertex } from '@game/data/clientGraph';
-import { clamp } from '.';
-import { findEdgeFromVertexToVertex, getSegment } from './graph';
-
-export interface HarvesterPosition {
-  edge: ClientGraphEdge;
-  at: number;
-}
-
-export interface HarvesterRoute {
-  fromAt: number;
-  vertices: ClientGraphVertex[];
-  toAt: number;
-  edgeIndexInRoute: number;
-}
+import { Point, PointMoveEvent, Route } from '@trufi/roads';
+import { clamp } from '@trufi/utils';
+import { SnowClientGraphEdge, SnowEdgeUserData } from './types';
 
 export interface HarvesterInitialData {
-  edge: ClientGraphEdge;
+  edge: SnowClientGraphEdge;
   at: number;
   speed: number;
   color: number;
@@ -24,51 +12,34 @@ export interface HarvesterInitialData {
 
 export class Harvester {
   public readonly color: number;
+  public point: Point;
   private score: number;
   private speed: number;
 
-  private forward = true;
   private lastUpdateTime = 0;
 
-  private position: HarvesterPosition;
-  private readonly route: HarvesterRoute;
-
   constructor(data: HarvesterInitialData) {
-    this.route = {
-      fromAt: data.at,
-      toAt: data.at,
-      vertices: [data.edge.a, data.edge.b],
-      edgeIndexInRoute: 0,
-    };
+    this.point = new Point({
+      position: {
+        edge: data.edge,
+        at: data.at,
+      },
+      speed: data.speed,
+    });
+    this.point.on('move', this.onMove);
 
     this.speed = data.speed;
     this.color = data.color;
     this.score = data.score;
-    this.position = { edge: data.edge, at: data.at };
   }
 
-  public setRoute(time: number, fromAt: number, vertices: ClientGraphVertex[], toAt: number) {
-    const maybeEdge = findEdgeFromVertexToVertex(vertices[0], vertices[1]);
-    if (!maybeEdge) {
-      console.log(`Не найдена кривая пути`);
-      return;
-    }
-
-    this.route.fromAt = fromAt;
-    this.route.vertices = vertices;
-    this.route.toAt = toAt;
-    this.route.edgeIndexInRoute = 0;
-
-    this.position.at = fromAt;
-    this.position.edge = maybeEdge.edge;
-
+  public setRoute(time: number, route: Route) {
+    this.point.setRoute(route);
     this.lastUpdateTime = time;
-
-    this.forward = maybeEdge.forward;
   }
 
   public getRoute() {
-    return this.route;
+    return this.point.getRoute();
   }
 
   public getScore() {
@@ -80,81 +51,43 @@ export class Harvester {
   }
 
   public getCoords() {
-    const { coords } = getSegment(this.position.edge, this.position.at);
-    return coords;
+    return this.point.getCoords();
   }
 
   public getPosition() {
-    return this.position;
+    return this.point.getPosition();
   }
 
   public isFinishedRoute() {
-    const isFinalRouteEdge = this.route.edgeIndexInRoute === this.route.vertices.length - 2;
-    return isFinalRouteEdge && this.position.at === this.route.toAt;
+    return this.point.isFinishedRoute();
   }
 
   public updateMoving(time: number) {
-    const { position } = this;
-
-    const passedDistanceInEdge = this.speed * (time - this.lastUpdateTime);
-
+    const dt = time - this.lastUpdateTime;
+    this.point.updateMoving(dt);
     this.lastUpdateTime = time;
-    const dx = position.edge.length ? passedDistanceInEdge / position.edge.length : 1;
-
-    const isFinalRouteEdge = this.route.edgeIndexInRoute === this.route.vertices.length - 2;
-    if (isFinalRouteEdge && position.at === this.route.toAt) {
-      return;
-    }
-
-    if (position.edge.enabled) {
-      // Обновляем загрязнение дороги и начисляем очки
-      const nextPollution = clamp(position.edge.pollution - position.edge.pollution * dx, 0, 1);
-      this.score += ((position.edge.pollution - nextPollution) * position.edge.length) / 1000;
-      position.edge.pollution = nextPollution;
-    }
-
-    let endAt: number;
-    if (isFinalRouteEdge) {
-      endAt = this.route.toAt;
-    } else {
-      endAt = this.forward ? 1 : 0;
-    }
-
-    let remain: number;
-    if (this.forward) {
-      position.at = position.at + dx;
-      remain = endAt - position.at;
-    } else {
-      position.at = position.at - dx;
-      remain = position.at - endAt;
-    }
-
-    if (remain < 0) {
-      if (isFinalRouteEdge) {
-        position.at = this.route.toAt;
-      } else {
-        this.route.edgeIndexInRoute++;
-        const maybeEdge = findEdgeFromVertexToVertex(
-          this.route.vertices[this.route.edgeIndexInRoute],
-          this.route.vertices[this.route.edgeIndexInRoute + 1],
-        );
-        if (maybeEdge) {
-          position.at = maybeEdge.forward ? 0 : 1;
-          position.edge = maybeEdge.edge;
-          this.forward = maybeEdge.forward;
-        } else {
-          console.log(`Не найдена следующая кривая пути}`);
-        }
-      }
-    }
   }
 
   public getDebugInfo() {
+    const position = this.point.getPosition();
     return {
       score: this.score,
       speed: this.speed,
-      at: this.position.at,
-      edge: this.position.edge.index,
+      at: position.at,
+      edge: position.edge.index,
     };
   }
+
+  private onMove = ({ edge, passedDistance }: PointMoveEvent<SnowEdgeUserData>) => {
+    const edgeData = edge.userData;
+
+    if (edgeData.enabled) {
+      const dx = edge.length ? passedDistance / edge.length : 1;
+
+      // Обновляем загрязнение дороги и начисляем очки
+      const nextPollution = clamp(edgeData.pollution - edgeData.pollution * dx, 0, 1);
+      this.score += ((edgeData.pollution - nextPollution) * edge.length) / 1000;
+      edgeData.pollution = nextPollution;
+    }
+  };
 }

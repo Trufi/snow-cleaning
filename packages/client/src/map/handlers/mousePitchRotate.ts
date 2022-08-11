@@ -1,4 +1,4 @@
-import { radToDeg } from '@game/utils';
+import { radToDeg } from '@trufi/utils';
 import { getMousePosition, normalizeMousePosition } from '../../utils';
 
 const config = {

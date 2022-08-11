@@ -1,8 +1,8 @@
+import * as cors from 'cors';
 import * as express from 'express';
 import * as path from 'path';
-import * as cors from 'cors';
-import { config } from './config';
 import { applyApiRoutes } from './api';
+import { config } from './config';
 import { Core } from './core';
 
 const app = express();
@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/assets', express.static(path.join(__dirname, '../../newdata/assets')));
+app.use('/assets', express.static(path.join(__dirname, './assets')));
 
 const server = app.listen(config.port, () => console.log(`Game server listen on ${config.port} port`));
 

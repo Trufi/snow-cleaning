@@ -1,4 +1,4 @@
-import { createRandomFunction } from '@game/utils';
+import { createRandomFunction } from '@trufi/utils';
 import { config } from './config';
 
 /**

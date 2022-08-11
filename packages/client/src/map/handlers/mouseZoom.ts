@@ -1,4 +1,4 @@
-import { clamp, throttle, sign } from '@game/utils';
+import { clamp, sign, throttle } from '@trufi/utils';
 
 const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 

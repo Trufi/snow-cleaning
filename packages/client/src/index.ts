@@ -1,7 +1,8 @@
 /// <reference path="../node_modules/@2gis/mapgl/global.d.ts" />
 
-import { prepareGraph } from '@game/data/clientGraph';
 import { config } from '@game/server/config';
+import { addStubDataToGraph } from '@game/utils';
+import { DataGraph } from '@trufi/roads';
 import { Snow } from 'mapgl-snow';
 import { InitialState } from './core';
 import { PointIcon, PointIconSize } from './map/pointBatch';
@@ -36,10 +37,10 @@ const render = new Render(map, icons);
 
 new Snow(map as any, { skipWaitingForMapIdle: true });
 
-fetch(`./assets/novosibirsk.json`)
+fetch(`${location.protocol}//${location.hostname}:${config.port}/assets/novosibirsk.json`)
   .then((res) => res.json())
-  .then((rawGraph: any) => {
-    const graph = prepareGraph(rawGraph);
+  .then((dataGraph: DataGraph) => {
+    addStubDataToGraph(dataGraph);
 
     // graph.vertices.forEach((vertex) => {
     //   new mapgl.Label(map, {
@@ -48,5 +49,5 @@ fetch(`./assets/novosibirsk.json`)
     //   });
     // });
 
-    new InitialState(graph, render);
+    new InitialState(dataGraph, render);
   });

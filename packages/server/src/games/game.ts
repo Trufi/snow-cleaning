@@ -1,14 +1,14 @@
-import { ClientGraph, prepareGraph } from '@game/data/clientGraph';
-import { clamp, mapMap } from '@game/utils';
 import { ClientMsg } from '@game/client/messages';
-import { vec2dist } from '@game/utils/vec2';
-import { projectGeoToMap } from '@game/utils/geo';
+import { addStubDataToGraph } from '@game/utils';
+import { SnowClientGraph } from '@game/utils/types';
+import { DataGraph, Roads } from '@trufi/roads';
+import { clamp, mapMap, mapPointFromLngLat, vec2dist } from '@trufi/utils';
 import { Cmd, cmd, union } from '../commands';
-import { msg } from '../messages';
 import { config } from '../config';
+import { msg } from '../messages';
 import { GameState, RestartData } from '../types';
-import { Bot } from './bot';
 import { random } from '../utils';
+import { Bot } from './bot';
 import { Player } from './player';
 
 interface GameOptions {
@@ -19,7 +19,8 @@ interface GameOptions {
 
 export class Game {
   public state: GameState;
-  private graph: ClientGraph;
+  private graph: SnowClientGraph;
+  private roads: Roads;
 
   constructor(options: GameOptions, private executeCmd: (cmd: Cmd) => void) {
     this.state = {
@@ -39,8 +40,13 @@ export class Game {
       },
     };
 
-    this.graph = prepareGraph(require('../../../newdata/assets/novosibirsk.json'));
-    enableEdgesInRadius(this.graph, projectGeoToMap([82.92170167330326, 55.028492869990366]), 2 * 1000 * 100);
+    const dataGraph: DataGraph = require('../assets/novosibirsk.json');
+    addStubDataToGraph(dataGraph);
+
+    this.roads = new Roads(dataGraph, { autoUpdate: false });
+    this.graph = this.roads.graph;
+
+    enableEdgesInRadius(this.graph, mapPointFromLngLat([82.92170167330326, 55.028492869990366]), 2 * 1000 * 100);
 
     for (let i = 0; i < 2; i++) {
       const bot = new Bot(this.graph, this.state.time);
@@ -153,7 +159,7 @@ export class Game {
       ...this.state,
       players: mapMap(players, (player) => player.getDebugInfo()),
       bots: mapMap(bots, (bot) => bot.getDebugInfo()),
-      edges: this.graph.edges.map(({ index, pollution }) => ({ index, pollution })),
+      edges: this.graph.edges.map(({ index, userData: { pollution } }) => ({ index, pollution })),
     };
   }
 }
@@ -162,7 +168,7 @@ function needToRestart(state: GameState) {
   return state.restart.need && state.time > state.restart.time;
 }
 
-function polluteRoads(graph: ClientGraph, state: GameState) {
+function polluteRoads(graph: SnowClientGraph, state: GameState) {
   const dt = state.time - state.lastPolluteTime;
 
   if (dt < config.polluteInterval) {
@@ -173,7 +179,7 @@ function polluteRoads(graph: ClientGraph, state: GameState) {
 
   const pollutionFactor = 0.005;
   graph.edges.forEach((edge) => {
-    edge.pollution = clamp(edge.pollution + (dt * pollutionFactor) / 1000, 0, 1);
+    edge.userData.pollution = clamp(edge.userData.pollution + (dt * pollutionFactor) / 1000, 0, 1);
   });
 }
 
@@ -193,10 +199,10 @@ const restart = (state: GameState): Cmd => {
   return [cmd.sendMsgTo(getTickBodyRecipientIds(state), msg.restartData(state)), cmd.notifyMain()];
 };
 
-function enableEdgesInRadius(graph: ClientGraph, center: number[], radius: number) {
+function enableEdgesInRadius(graph: SnowClientGraph, center: number[], radius: number) {
   for (const edge of graph.edges) {
     if (vec2dist(edge.a.coords, center) < radius || vec2dist(edge.b.coords, center) < radius) {
-      edge.enabled = true;
+      edge.userData.enabled = true;
     }
   }
 }

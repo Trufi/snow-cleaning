@@ -1,4 +1,3 @@
-import { mapToArray } from '@game/utils';
 import { config } from '@game/server/config';
 import { GameState } from '../../../game/game';
 import style from './index.module.css';
@@ -10,7 +9,7 @@ export interface RatingProps {
 const rowsCount = 5;
 
 export function Rating({ state }: RatingProps) {
-  const players = mapToArray(state.players);
+  const players = Array.from(state.players.values());
   players.sort((a, b) => b.score - a.score);
 
   const currentPlayerIndex = players.findIndex((player) => player === state.currentPlayer);

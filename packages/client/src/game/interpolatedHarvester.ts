@@ -1,12 +1,16 @@
-import { HarvesterInitialData } from '@game/utils/harvester';
-import { vec2lerp } from '@game/utils/vec2';
-import { getSegment } from '@game/utils/graph';
+import { vec2lerp } from '@trufi/utils';
 import { ServerTime } from './serverTime';
-import { ClientGraphEdge } from '@game/data/clientGraph';
 
 export interface InterpolatedHarvesterStep {
   time: number;
   coords: number[];
+}
+
+export interface InterpolatedHarvesterInitialData {
+  coords: number[];
+  speed: number;
+  color: number;
+  score: number;
 }
 
 export class InterpolatedHarvester {
@@ -16,10 +20,8 @@ export class InterpolatedHarvester {
 
   private steps: InterpolatedHarvesterStep[] = [];
 
-  constructor(private serverTime: ServerTime, data: HarvesterInitialData) {
-    const { coords } = getSegment(data.edge, data.at);
-    this.coords = coords;
-
+  constructor(private serverTime: ServerTime, data: InterpolatedHarvesterInitialData) {
+    this.coords = data.coords;
     this.color = data.color;
     this.score = data.score;
   }
@@ -32,8 +34,7 @@ export class InterpolatedHarvester {
     return this.coords;
   }
 
-  public addStep(time: number, edge: ClientGraphEdge, at: number) {
-    const { coords } = getSegment(edge, at);
+  public addStep(time: number, coords: number[]) {
     this.steps.push({ time, coords });
   }
 

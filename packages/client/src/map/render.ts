@@ -1,9 +1,9 @@
 import { Harvester } from '@game/utils/harvester';
-import { ClientGraphEdge } from '@game/data/clientGraph';
-import { RenderContext } from '../types';
-import { PointBatch, PointBatchEntity, PointIcon } from './pointBatch';
-import { LineBatch } from './lineBatch';
+import { ClientGraphEdge } from '@trufi/roads';
 import { InterpolatedHarvester } from '../game/interpolatedHarvester';
+import { RenderContext } from '../types';
+import { LineBatch } from './lineBatch';
+import { PointBatch, PointBatchEntity, PointIcon } from './pointBatch';
 
 interface RenderPoint {
   harvester: InterpolatedHarvester | Harvester;

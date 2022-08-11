@@ -1,21 +1,19 @@
-import { ClientGraph } from '@game/data/clientGraph';
-import { pathFindFromMidway } from '@game/utils/pathfind';
 import { ServerMsg } from '@game/server/messages';
-import { mapMap } from '@game/utils';
-import { projectGeoToMap, projectMapToGeo } from '@game/utils/geo';
-import { Harvester } from '@game/utils/harvester';
+import { Harvester, HarvesterInitialData } from '@game/utils/harvester';
+import { SnowClientGraph } from '@game/utils/types';
+import { DataGraph, pathfindFromMidway, Roads } from '@trufi/roads';
+import { mapMap, mapPointFromLngLat, mapPointToLngLat } from '@trufi/utils';
 import { cmd, Cmd, union } from '../commands';
 import { drawMarker, drawRoute } from '../map/drawRoute';
+import { MousePitchRotate } from '../map/handlers/mousePitchRotate';
+import { MouseZoom } from '../map/handlers/mouseZoom';
+import { TouchZoomRotate } from '../map/handlers/touchZoomRotate';
 import { Render } from '../map/render';
 import { msg } from '../messages';
-import { getTime } from '../utils';
-import { MouseZoom } from '../map/handlers/mouseZoom';
-import { MousePitchRotate } from '../map/handlers/mousePitchRotate';
-import { TouchZoomRotate } from '../map/handlers/touchZoomRotate';
-import { ServerTime } from './serverTime';
-import { InterpolatedHarvester } from './interpolatedHarvester';
 import { RenderUIFunction } from '../ui/renderUI';
-import { VertexFinder } from './vertexFinder';
+import { getTime } from '../utils';
+import { InterpolatedHarvester, InterpolatedHarvesterInitialData } from './interpolatedHarvester';
+import { ServerTime } from './serverTime';
 
 export interface GamePlayer {
   id: string;
@@ -44,37 +42,43 @@ export interface GameState {
 
 export class Game {
   private state: GameState;
+  private roads: Roads;
+  private graph: SnowClientGraph;
   private mouseZoom: MouseZoom;
   private mousePitchRotate: MousePitchRotate;
   private touchZoomRotate: TouchZoomRotate;
   private serverTime: ServerTime;
-  private vertexFinder: VertexFinder;
   private isMouseDown = false;
 
   constructor(
-    private graph: ClientGraph,
+    dataGraph: DataGraph,
     private render: Render,
     private renderUI: RenderUIFunction,
     startData: ServerMsg['startData'],
   ) {
     const time = getTime();
 
+    this.roads = new Roads(dataGraph);
+    this.graph = this.roads.graph;
     this.serverTime = new ServerTime(time);
-    this.vertexFinder = new VertexFinder(graph);
 
     startData.enabledEdges.forEach((edgeIndex) => {
-      this.graph.edges[edgeIndex].enabled = true;
+      this.graph.edges[edgeIndex].userData.enabled = true;
     });
 
     const players: GameState['players'] = new Map();
     startData.players.forEach((player) => {
-      const harvesterData = {
-        ...player.harvester,
-        score: player.score,
-        edge: this.graph.edges[player.harvester.edgeIndex],
-      };
-
       if (player.id !== startData.playerId) {
+        const coords = this.roads.getPositionCoords({
+          edge: this.graph.edges[player.harvester.edgeIndex],
+          at: player.harvester.at,
+        });
+
+        const harvesterData: InterpolatedHarvesterInitialData = {
+          ...player.harvester,
+          score: player.score,
+          coords,
+        };
         const gamePlayer: GamePlayer = {
           id: player.id,
           name: player.name,
@@ -83,6 +87,11 @@ export class Game {
         };
         players.set(player.id, gamePlayer);
       } else {
+        const harvesterData: HarvesterInitialData = {
+          ...player.harvester,
+          score: player.score,
+          edge: this.graph.edges[player.harvester.edgeIndex],
+        };
         const gamePlayer: CurrentGamePlayer = {
           id: player.id,
           name: player.name,
@@ -117,8 +126,8 @@ export class Game {
       if (!ev.ctrlKey && !this.isMouseDown) {
         return;
       }
-      this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([ev.clientX, ev.clientY]));
-      const toPosition = this.vertexFinder.findNearest(this.state.lastGoToPoint);
+      this.state.lastGoToPoint = mapPointFromLngLat(this.render.map.unproject([ev.clientX, ev.clientY]));
+      const toPosition = this.roads.findNearestVertex(this.state.lastGoToPoint);
       if (toPosition) {
         drawMarker(this.render.map, toPosition.coords);
       }
@@ -128,8 +137,8 @@ export class Game {
     handlerContainer.addEventListener('mouseup', () => (this.isMouseDown = false));
     handlerContainer.addEventListener('click', (ev) => {
       ev.preventDefault();
-      this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([ev.clientX, ev.clientY]));
-      const toPosition = this.vertexFinder.findNearest(this.state.lastGoToPoint);
+      this.state.lastGoToPoint = mapPointFromLngLat(this.render.map.unproject([ev.clientX, ev.clientY]));
+      const toPosition = this.roads.findNearestVertex(this.state.lastGoToPoint);
       if (toPosition) {
         drawMarker(this.render.map, toPosition.coords);
       }
@@ -141,7 +150,7 @@ export class Game {
       }
       ev.preventDefault();
       const touch = ev.touches[0];
-      this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([touch.clientX, touch.clientY]));
+      this.state.lastGoToPoint = mapPointFromLngLat(this.render.map.unproject([touch.clientX, touch.clientY]));
     });
     handlerContainer.addEventListener('touchend', (ev) => {
       if (ev.touches.length > 0 && ev.changedTouches.length !== 1) {
@@ -149,7 +158,7 @@ export class Game {
       }
       ev.preventDefault();
       const touch = ev.changedTouches[0];
-      this.state.lastGoToPoint = projectGeoToMap(this.render.map.unproject([touch.clientX, touch.clientY]));
+      this.state.lastGoToPoint = mapPointFromLngLat(this.render.map.unproject([touch.clientX, touch.clientY]));
     });
   }
 
@@ -164,10 +173,15 @@ export class Game {
       return;
     }
 
-    const harvesterData = {
+    const coords = this.roads.getPositionCoords({
+      edge: this.graph.edges[player.harvester.edgeIndex],
+      at: player.harvester.at,
+    });
+
+    const harvesterData: InterpolatedHarvesterInitialData = {
       ...player.harvester,
       score: player.score,
-      edge: this.graph.edges[player.harvester.edgeIndex],
+      coords,
     };
 
     const gamePlayer: GamePlayer = {
@@ -207,7 +221,11 @@ export class Game {
       const { harvester } = gamePlayer;
 
       if (harvester instanceof InterpolatedHarvester) {
-        harvester.addStep(data.time, this.graph.edges[edgeIndex], at);
+        const coords = this.roads.getPositionCoords({
+          edge: this.graph.edges[edgeIndex],
+          at,
+        });
+        harvester.addStep(data.time, coords);
       }
     });
 
@@ -217,7 +235,7 @@ export class Game {
   public updatePollutionFromServer(data: ServerMsg['pollutionData']) {
     for (const key in data.changedEdges) {
       const index = Number(key);
-      this.graph.edges[index].pollution = data.changedEdges[key];
+      this.graph.edges[index].userData.pollution = data.changedEdges[key];
     }
 
     this.render.updateLines(this.graph.edges);
@@ -234,7 +252,7 @@ export class Game {
 
     this.state.players.forEach(({ harvester }) => harvester.updateMoving(time));
 
-    this.render.map.setCenter(projectMapToGeo(this.state.currentPlayer.harvester.getCoords()));
+    this.render.map.setCenter(mapPointToLngLat(this.state.currentPlayer.harvester.getCoords()));
 
     this.mouseZoom.update();
     this.mousePitchRotate.update();
@@ -257,24 +275,24 @@ export class Game {
     if (!this.state.lastGoToPoint) {
       return;
     }
-    const toPosition = this.vertexFinder.findNearest(this.state.lastGoToPoint);
+    const toPosition = this.roads.findNearestVertex(this.state.lastGoToPoint);
     this.state.lastGoToPoint = undefined;
     if (!toPosition) {
       return;
     }
 
     const harvester = this.state.currentPlayer.harvester;
-    const path = pathFindFromMidway(harvester.getPosition(), toPosition);
-    if (!path) {
+    const route = pathfindFromMidway(harvester.getPosition(), toPosition);
+    if (!route) {
       return;
     }
 
-    drawRoute(this.render.map, harvester.getPosition(), path, toPosition);
+    drawRoute(this.render.map, route);
 
-    harvester.setRoute(this.state.time, harvester.getPosition().at, path, toPosition.at);
+    harvester.setRoute(this.state.time, route);
 
     const serverTime = this.state.time - this.serverTime.getDiff();
-    return cmd.sendMsg(msg.newRoute(serverTime, harvester.getPosition().at, path, toPosition.at));
+    return cmd.sendMsg(msg.newRoute(serverTime, route));
   }
 
   private updatePointsSize() {

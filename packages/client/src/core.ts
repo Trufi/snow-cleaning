@@ -1,11 +1,11 @@
-import { AnyServerMsg, ServerMsg } from '@game/server/messages';
-import { ClientGraph } from '@game/data/clientGraph';
 import { config } from '@game/server/config';
-import { Transport, TransportProps } from './transport';
-import { msg } from './messages';
+import { AnyServerMsg, ServerMsg } from '@game/server/messages';
+import { DataGraph } from '@trufi/roads';
+import { Cmd, ExistCmd } from './commands';
 import { Game } from './game/game';
 import { Render } from './map/render';
-import { Cmd, ExistCmd } from './commands';
+import { msg } from './messages';
+import { Transport, TransportProps } from './transport';
 import { renderUI, RenderUIFunction } from './ui/renderUI';
 
 export class InitialState {
@@ -14,7 +14,7 @@ export class InitialState {
   private transport: Transport;
   private renderUI = renderUI;
 
-  constructor(private graph: ClientGraph, private render: Render) {
+  constructor(private dataGraph: DataGraph, private render: Render) {
     this.messageHandlers = {
       onOpen: () => console.log('open'),
       onMessage: this.onServerMessage,
@@ -41,7 +41,7 @@ export class InitialState {
       }
 
       case 'startData': {
-        new InGameState(this.messageHandlers, this.transport, this.graph, this.render, this.renderUI, serverMsg);
+        new InGameState(this.messageHandlers, this.transport, this.dataGraph, this.render, this.renderUI, serverMsg);
         break;
       }
     }
@@ -60,13 +60,13 @@ class InGameState {
   constructor(
     messageHandlers: TransportProps,
     private transport: Transport,
-    private graph: ClientGraph,
+    dataGraph: DataGraph,
     render: Render,
     renderUI: RenderUIFunction,
     startData: ServerMsg['startData'],
   ) {
     messageHandlers.onMessage = this.onServerMessage;
-    this.game = new Game(this.graph, render, renderUI, startData);
+    this.game = new Game(dataGraph, render, renderUI, startData);
 
     requestAnimationFrame(this.loop);
   }

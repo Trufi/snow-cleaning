@@ -1,5 +1,4 @@
-import { radToDeg } from '@game/utils';
-import { projectGeoToMap } from '@game/utils/geo';
+import { mapPointFromLngLat, radToDeg } from '@trufi/utils';
 import { getMousePosition } from '../../utils';
 
 const config = {
@@ -34,11 +33,11 @@ export class TouchZoomRotate {
     const newZoom = this.map.getZoom() + (Math.log(scale) / Math.log(2)) * config.mobileDelta;
 
     // rotate
-    const st1 = projectGeoToMap(this.map.unproject(this.touchStartPoints[0]));
-    const st2 = projectGeoToMap(this.map.unproject(this.touchStartPoints[1]));
+    const st1 = mapPointFromLngLat(this.map.unproject(this.touchStartPoints[0]));
+    const st2 = mapPointFromLngLat(this.map.unproject(this.touchStartPoints[1]));
 
-    const mt1 = projectGeoToMap(this.map.unproject(this.touchMovePoints[0]));
-    const mt2 = projectGeoToMap(this.map.unproject(this.touchMovePoints[1]));
+    const mt1 = mapPointFromLngLat(this.map.unproject(this.touchMovePoints[0]));
+    const mt2 = mapPointFromLngLat(this.map.unproject(this.touchMovePoints[1]));
 
     let angle = 0;
 
