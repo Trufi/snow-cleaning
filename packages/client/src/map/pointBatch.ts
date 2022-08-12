@@ -1,9 +1,9 @@
-import * as mat4 from '@2gis/gl-matrix/mat4';
+import Buffer from '2gl/Buffer';
+import Shader from '2gl/Shader';
 import ShaderProgram from '2gl/ShaderProgram';
 import Texture from '2gl/Texture';
-import Shader from '2gl/Shader';
-import Buffer from '2gl/Buffer';
 import Vao from '2gl/Vao';
+import { mat4create, mat4fromTranslationScale, mat4mul } from '@trufi/utils';
 import { RenderContext } from '../types';
 
 const vertexShaderSource = `
@@ -78,8 +78,17 @@ interface InnerBufferData {
 }
 
 export class PointBatch {
-  private matrix: Mat4;
-  private program: ShaderProgram;
+  private matrix = mat4create();
+  private program = new ShaderProgram({
+    vertex: new Shader('vertex', vertexShaderSource),
+    fragment: new Shader('fragment', fragmentShaderSource),
+    attributes: [{ name: 'a_position' }, { name: 'a_offset' }, { name: 'a_uv' }],
+    uniforms: [
+      { name: 'u_mvp', type: 'mat4' },
+      { name: 'u_size', type: '2fv' },
+      { name: 'u_texture', type: '1i' },
+    ],
+  });
   private vao?: Vao;
 
   private data?: InnerData;
@@ -89,31 +98,13 @@ export class PointBatch {
 
   private atlas: Atlas;
   private texture?: Texture;
-  private points: PointBatchEntity[];
-  private min: number[];
-  private max: number[];
-  private vertexCount: number;
+  private points: PointBatchEntity[] = [];
+  private min = [0, 0];
+  private max = [0, 0];
+  private vertexCount = 0;
 
   constructor(private renderContext: RenderContext, icons: PointIcon[]) {
-    this.matrix = mat4.create();
-    this.points = [];
-    this.vertexCount = 0;
-    this.min = [0, 0];
-    this.max = [0, 0];
-
-    this.program = new ShaderProgram({
-      vertex: new Shader('vertex', vertexShaderSource),
-      fragment: new Shader('fragment', fragmentShaderSource),
-      attributes: [{ name: 'a_position' }, { name: 'a_offset' }, { name: 'a_uv' }],
-      uniforms: [
-        { name: 'u_mvp', type: 'mat4' },
-        { name: 'u_size', type: '2fv' },
-        { name: 'u_texture', type: '1i' },
-      ],
-    });
-
     this.atlas = createAtlas(icons);
-
     this.atlas.imagePromise.then((canvas) => {
       this.texture = new Texture(canvas, {
         flipY: false,
@@ -183,7 +174,7 @@ export class PointBatch {
     });
   }
 
-  public render(cameraMatrix: Mat4, mapSize: number[], mapZoom: number) {
+  public render(cameraMatrix: number[], mapSize: number[], mapZoom: number) {
     if (!this.vao || !this.texture) {
       return;
     }
@@ -195,7 +186,7 @@ export class PointBatch {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
-    mat4.multiply(tempMatrix, cameraMatrix, this.matrix);
+    mat4mul(tempMatrix as any, cameraMatrix, this.matrix);
     this.texture.enable(gl);
 
     this.program.enable(gl).bind(gl, {
@@ -222,7 +213,7 @@ export class PointBatch {
     data.uv.index = 0;
 
     const size = [this.max[0] - this.min[0], this.max[1] - this.min[1]];
-    mat4.fromTranslationScale(this.matrix, [this.min[0], this.min[1], 0], [size[0], size[1], 1]);
+    mat4fromTranslationScale(this.matrix, [this.min[0], this.min[1], 0], [size[0], size[1], 1]);
 
     const icons = this.atlas.icons[Math.floor(mapZoom)];
     const [atlasWidth, atlasHeight] = atlasSize;

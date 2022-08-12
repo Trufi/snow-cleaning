@@ -1,6 +1,17 @@
 {
-  "name": "root",
+  "name": "snow-cleaning",
+  "description": "Multiplayer game about cleaning snow in the city",
   "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "Mstislav Zhivodkov",
+    "email": "stevemyz@gmail.com",
+    "url": "https://trufi.github.io/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Trufi/snow-cleaning.git"
+  },
   "scripts": {
     "ci": "npm ci --prefix packages/client && npm ci --prefix packages/server",
     "build": "npm run build --prefix packages/client && npm run build --prefix packages/server",
@@ -14,6 +25,7 @@
   "dependencies": {
     "@trufi/roads": "0.0.9",
     "@trufi/utils": "0.0.12",
-    "tslib": "^2.4.0"
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
   }
 }

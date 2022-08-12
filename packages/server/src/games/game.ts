@@ -46,7 +46,7 @@ export class Game {
     this.roads = new Roads(dataGraph, { autoUpdate: false });
     this.graph = this.roads.graph;
 
-    enableEdgesInRadius(this.graph, mapPointFromLngLat([82.92170167330326, 55.028492869990366]), 2 * 1000 * 100);
+    enableEdgesInRadius(this.graph, mapPointFromLngLat([82.92170167330326, 55.028492869990366]), 3 * 1000 * 100);
 
     for (let i = 0; i < 2; i++) {
       const bot = new Bot(this.graph, this.state.time);

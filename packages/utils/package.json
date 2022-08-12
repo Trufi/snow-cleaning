@@ -1,25 +1,4 @@
 {
   "name": "@game/utils",
-  "private": true,
-  "version": "0.0.0",
-  "description": "",
-  "index": "src/index.ts",
-  "typings": "src/index.ts",
-  "author": {
-    "name": "Mstislav Zhivodkov",
-    "email": "stevemyz@gmail.com",
-    "url": "https://trufi.github.io/"
-  },
-  "scripts": {
-    "start": "",
-    "lint": "tslint 'src/**/*.ts'",
-    "prettier": "prettier --check \"./**/*.{ts,tsx,js,json,html,css}\"",
-    "test": "npm run lint && npm run prettier"
-  },
-  "dependencies": {
-    "@types/node": "^18.7.1"
-  },
-  "devDependencies": {
-    "typescript": "^4.7.4"
-  }
+  "private": true
 }
