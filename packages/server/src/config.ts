@@ -5,6 +5,8 @@ export const config = {
   publicServerPort: process.env.PUBLIC_SERVER_PORT || 3001,
   publicWebSocketURL: process.env.PUBLIC_WS_URL || 'ws://localhost:3001',
 
+  secretForCommands: process.env.GAME_SERVER_CMD_SECRET || 'secret',
+
   clientsCheckInterval: 30000,
 
   serverGameStep: 30,

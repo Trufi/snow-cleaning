@@ -3,8 +3,9 @@ import * as Joi from 'joi';
 import { mapMap } from '@trufi/utils';
 import { KickAllRequest, StateRequest } from './types';
 import { Core } from '../core';
+import {config} from '../config';
 
-const secret = 'secretcode223';
+const secret = config.secretForCommands;
 
 export const applyApiRoutes = (app: express.Express, core: Core) => {
   // healthcheck
